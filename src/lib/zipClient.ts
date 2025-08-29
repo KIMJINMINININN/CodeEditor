@@ -6,6 +6,19 @@ const worker = new Worker(new URL('../worker/zip.worker.ts', import.meta.url), {
 const normalize = (p: string) => p.replace(/^\/+/, '').replace(/\\/g, '/');
 
 type Waiter = (e: MessageEvent<any>) => void;
+
+// 보조: 확장자→MIME 추정
+function guessMime(path: string) {
+    const ext = path.split('.').pop()?.toLowerCase();
+    if (!ext) return 'application/octet-stream';
+    if (ext === 'svg') return 'image/svg+xml';
+    if (ext === 'ico') return 'image/x-icon';
+    if (['png','jpg','jpeg','gif','webp','bmp'].includes(ext)) {
+        return `image/${ext === 'jpg' ? 'jpeg' : ext}`;
+    }
+    return 'application/octet-stream';
+}
+
 function once<T = any>(type: string): Promise<T> {
     return new Promise((resolve) => {
         const handler: Waiter = (e) => {
@@ -26,17 +39,20 @@ export async function loadZip(file: File): Promise<TreeNode> {
 }
 
 export async function fetchFileTab(path: string): Promise<Tab> {
-    worker.postMessage({ type: 'getFile', path: normalize(path) });
-    const res = await once<{ type: 'file'; path: string; isBinary: boolean; text?: string; base64?: string }>('file');
-    if (res.isBinary) {
-        const ext = extOf(path);
-        const isImage = ['png','jpg','jpeg','gif','webp','bmp','svg','ico'].includes(ext);
-        const mime = ext === 'svg' ? 'image/svg+xml' : (ext === 'ico' ? 'image/x-icon' : `image/${ext==='jpg'?'jpeg':ext}`);
+    worker.postMessage({ type: 'getFile', path });
+    const res = await once<{ type:'file'; path:string; isBinary:true; buffer:ArrayBuffer }|{ type:'file'; path:string; isBinary:false; text:string }>('file');
+
+    if ('buffer' in res) {
+        // ✅ 이미지면 Blob URL로 프리뷰
+        const mime = guessMime(res.path);
+        const blob = new Blob([res.buffer], { type: mime });
+        const url = URL.createObjectURL(blob);
+        const isImage = mime.startsWith('image/');
         return isImage
-            ? { path, kind: 'image', dataUrl: `data:${mime};base64,${res.base64}` }
-            : { path, kind: 'binary' };
+            ? { path: res.path, kind: 'image', dataUrl: url }
+            : { path: res.path, kind: 'binary' };
     } else {
-        return { path, kind: 'text', content: res.text!, language: guessLanguage(path) };
+        return { path: res.path, kind: 'text', content: res.text, language: guessLanguage(res.path) };
     }
 }
 

@@ -25,7 +25,11 @@ export const useFsStore = create<State>((set) => ({
         activePath: t.path
     })),
     closeTab: (path) => set((s) => {
-        const tabs = s.tabs.filter(t => t.path !== path);
+        const t = s.tabs.find(x => x.path === path);
+        if (t?.kind === 'image' && t.dataUrl?.startsWith('blob:')) {
+            URL.revokeObjectURL(t.dataUrl); // ✅ 누수 방지
+        }
+        const tabs = s.tabs.filter(tab => tab.path !== path);
         const activePath = s.activePath === path ? tabs.at(-1)?.path : s.activePath;
         return { tabs, activePath };
     }),

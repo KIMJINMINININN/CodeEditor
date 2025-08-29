@@ -43,8 +43,12 @@ self.onmessage = (e) => {
             if (!fe) throw new Error('not found');
 
             if (fe.isBinary) {
-                const b64 = btoa(String.fromCharCode(...fe.bytes));
-                postMessage({ type: 'file', path: fe.path, isBinary: true, base64: b64 }, undefined);
+                // ✅ 원본을 보존하기 위해 복제본을 만들어 전송
+                const copy = fe.bytes.slice(); // Uint8Array 복제
+                postMessage(
+                    { type: 'file', path: fe.path, isBinary: true, buffer: copy.buffer },
+                    [copy.buffer] // ✅ Transferable 로 복사본을 이동 (원본은 유지)
+                );
             } else {
                 const text = strFromU8(fe.bytes);
                 postMessage({ type: 'file', path: fe.path, isBinary: false, text }, undefined);
