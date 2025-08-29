@@ -15,9 +15,11 @@
     "@tanstack/react-query": "^5.51.0",
     "fflate": "^0.8.2",
     "monaco-editor": "^0.52.0",
+    "prettier": "^3.6.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "styled-components": "^6.1.11",
+    "vscode-codicons": "^0.0.17",
     "zustand": "^4.5.2"
   },
   "devDependencies": {
@@ -39,6 +41,8 @@
     "typescript": "^5.6.2",
     "webpack": "^5.95.0",
     "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^5.0.4"
+    "webpack-dev-server": "^5.0.4",
+    "eslint-config-prettier": "8.3.0",
+    "eslint-plugin-prettier": "^5.2.3"
   }
 }
