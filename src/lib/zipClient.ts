@@ -3,6 +3,7 @@ import { buildTree } from './tree';
 import { guessLanguage, extOf } from './isBinary';
 
 const worker = new Worker(new URL('../worker/zip.worker.ts', import.meta.url), { type: 'module' });
+const normalize = (p: string) => p.replace(/^\/+/, '').replace(/\\/g, '/');
 
 type Waiter = (e: MessageEvent<any>) => void;
 function once<T = any>(type: string): Promise<T> {
@@ -25,7 +26,7 @@ export async function loadZip(file: File): Promise<TreeNode> {
 }
 
 export async function fetchFileTab(path: string): Promise<Tab> {
-    worker.postMessage({ type: 'getFile', path });
+    worker.postMessage({ type: 'getFile', path: normalize(path) });
     const res = await once<{ type: 'file'; path: string; isBinary: boolean; text?: string; base64?: string }>('file');
     if (res.isBinary) {
         const ext = extOf(path);
@@ -40,7 +41,7 @@ export async function fetchFileTab(path: string): Promise<Tab> {
 }
 
 export async function updateText(path: string, content: string) {
-    worker.postMessage({ type: 'updateFile', path, text: content });
+    worker.postMessage({ type: 'updateFile', path: normalize(path), text: content });
     await once('updated');
 }
 
