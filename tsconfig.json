@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2021",
+    "lib": ["ES2021", "DOM", "WebWorker"],
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "types": ["react", "react-dom","webpack-env", "jest", "@testing-library/jest-dom"]
+  },
+  "include": ["src", "__tests__", "__mocks__"]
+}
