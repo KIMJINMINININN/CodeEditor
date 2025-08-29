@@ -1,9 +1,14 @@
+// src/store/useFsStore.ts
 import { create } from 'zustand';
+import { revokeIfBlobUrl } from '../lib/zipClient';
 
 export type NodeType = 'file'|'folder';
 export type TreeNode = { name: string; path: string; type: NodeType; size?: number; children?: TreeNode[] };
 
-export type Tab = { path: string; kind: 'text'|'image'|'binary'; language?: string; content?: string; dataUrl?: string };
+export type Tab =
+    | { path: string; kind: 'text';   language?: string; content?: string }
+    | { path: string; kind: 'image';  dataUrl: string }
+    | { path: string; kind: 'binary' };
 
 type State = {
     tree: TreeNode | null;
@@ -16,7 +21,7 @@ type State = {
     setActive: (path?: string) => void;
 };
 
-export const useFsStore = create<State>((set) => ({
+export const useFsStore = create<State>((set, get) => ({
     tree: null,
     tabs: [],
     setTree: (t) => set({ tree: t }),
@@ -25,16 +30,16 @@ export const useFsStore = create<State>((set) => ({
         activePath: t.path
     })),
     closeTab: (path) => set((s) => {
-        const t = s.tabs.find(x => x.path === path);
-        if (t?.kind === 'image' && t.dataUrl?.startsWith('blob:')) {
-            URL.revokeObjectURL(t.dataUrl); // ✅ 누수 방지
-        }
-        const tabs = s.tabs.filter(tab => tab.path !== path);
+        // 🔻 메모리 누수 방지: 이미지 blob URL 해제
+        const target = s.tabs.find(x => x.path === path);
+        if (target && target.kind === 'image') revokeIfBlobUrl(target.dataUrl);
+
+        const tabs = s.tabs.filter(t => t.path !== path);
         const activePath = s.activePath === path ? tabs.at(-1)?.path : s.activePath;
         return { tabs, activePath };
     }),
     updateText: (path, content) => set((s) => ({
-        tabs: s.tabs.map(t => t.path === path ? { ...t, content } : t)
+        tabs: s.tabs.map(t => t.path === path && t.kind === 'text' ? { ...t, content } : t)
     })),
     setActive: (p) => set({ activePath: p })
 }));

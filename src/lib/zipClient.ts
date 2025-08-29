@@ -1,49 +1,40 @@
+// src/lib/zipClient.ts
 import type { TreeNode, Tab } from '../store/useFsStore';
 import { buildTree } from './tree';
-import { guessLanguage, extOf } from './isBinary';
+import { guessLanguage, guessMime } from './isBinary';
 
-const worker = new Worker(new URL('../worker/zip.worker.ts', import.meta.url), { type: 'module' });
 const normalize = (p: string) => p.replace(/^\/+/, '').replace(/\\/g, '/');
 
-type Waiter = (e: MessageEvent<any>) => void;
+const worker = new Worker(new URL('../worker/zip.worker.ts', import.meta.url), { type: 'module' });
 
-// 보조: 확장자→MIME 추정
-function guessMime(path: string) {
-    const ext = path.split('.').pop()?.toLowerCase();
-    if (!ext) return 'application/octet-stream';
-    if (ext === 'svg') return 'image/svg+xml';
-    if (ext === 'ico') return 'image/x-icon';
-    if (['png','jpg','jpeg','gif','webp','bmp'].includes(ext)) {
-        return `image/${ext === 'jpg' ? 'jpeg' : ext}`;
-    }
-    return 'application/octet-stream';
-}
+type FileEventText = { type:'file'; path:string; isBinary:false; text:string };
+type FileEventBin  = { type:'file'; path:string; isBinary:true;  buffer:ArrayBuffer };
+type FileEvent = FileEventText | FileEventBin;
 
 function once<T = any>(type: string): Promise<T> {
     return new Promise((resolve) => {
-        const handler: Waiter = (e) => {
-            if (e.data?.type === type) {
-                worker.removeEventListener('message', handler as any);
+        const handler = (e: MessageEvent) => {
+            if ((e.data as any)?.type === type) {
+                worker.removeEventListener('message', handler);
                 resolve(e.data as T);
             }
         };
-        worker.addEventListener('message', handler as any);
+        worker.addEventListener('message', handler);
     });
 }
 
 export async function loadZip(file: File): Promise<TreeNode> {
     const buf = await file.arrayBuffer();
     worker.postMessage({ type: 'loadZip', buffer: buf }, [buf]);
-    const { tree } = await once<{ type: 'loaded'; tree: { path: string; size?: number }[] }>('loaded');
+    const { tree } = await once<{ type:'loaded'; tree: { path:string; size?:number }[] }>('loaded');
     return buildTree(tree);
 }
 
 export async function fetchFileTab(path: string): Promise<Tab> {
-    worker.postMessage({ type: 'getFile', path });
-    const res = await once<{ type:'file'; path:string; isBinary:true; buffer:ArrayBuffer }|{ type:'file'; path:string; isBinary:false; text:string }>('file');
+    worker.postMessage({ type: 'getFile', path: normalize(path) });
+    const res = await once<FileEvent>('file');
 
-    if ('buffer' in res) {
-        // ✅ 이미지면 Blob URL로 프리뷰
+    if (res.isBinary) {
         const mime = guessMime(res.path);
         const blob = new Blob([res.buffer], { type: mime });
         const url = URL.createObjectURL(blob);
@@ -52,7 +43,12 @@ export async function fetchFileTab(path: string): Promise<Tab> {
             ? { path: res.path, kind: 'image', dataUrl: url }
             : { path: res.path, kind: 'binary' };
     } else {
-        return { path: res.path, kind: 'text', content: res.text, language: guessLanguage(res.path) };
+        return {
+            path: res.path,
+            kind: 'text',
+            content: res.text,
+            language: guessLanguage(res.path)
+        };
     }
 }
 
@@ -63,6 +59,11 @@ export async function updateText(path: string, content: string) {
 
 export async function buildZip(): Promise<Blob> {
     worker.postMessage({ type: 'buildZip' });
-    const { buffer } = await once<{ type: 'bundled'; buffer: ArrayBuffer }>('bundled');
+    const { buffer } = await once<{ type:'bundled'; buffer:ArrayBuffer }>('bundled');
     return new Blob([buffer], { type: 'application/zip' });
+}
+
+/** blob: URL 해제 유틸 (메모리 누수 방지) */
+export function revokeIfBlobUrl(url?: string) {
+    if (url && url.startsWith('blob:')) URL.revokeObjectURL(url);
 }

@@ -1,74 +1,104 @@
 /// <reference lib="webworker" />
 import { unzipSync, zipSync, strFromU8, strToU8 } from 'fflate';
-import { isProbablyBinary } from '../lib/isBinary';
+import { decideFileKind } from '../lib/isBinary';
 
-// 워커 전역 상태: 파일 저장
-type FileEntry = { path: string; bytes: Uint8Array; isBinary: boolean };
-const files = new Map<string, FileEntry>();
+// ==============================
+// Types
+// ==============================
+type Entry = {
+    path: string;
+    bytes: Uint8Array;
+    kind: 'text'|'image'|'binary';
+};
 
-type LoadZipMsg = { type: 'loadZip'; buffer: ArrayBuffer };
-type GetFileMsg = { type: 'getFile'; path: string };
+type LoadZipMsg    = { type: 'loadZip';    buffer: ArrayBuffer };
+type GetFileMsg    = { type: 'getFile';    path: string };
 type UpdateFileMsg = { type: 'updateFile'; path: string; text: string };
-type BuildZipMsg = { type: 'buildZip' };
+type BuildZipMsg   = { type: 'buildZip' };
 type InMsg = LoadZipMsg | GetFileMsg | UpdateFileMsg | BuildZipMsg;
 
-type Out =
-    | { type: 'loaded'; tree: { path: string; size?: number }[] }
-    | { type: 'file'; path: string; isBinary: boolean; text?: string; base64?: string }
-    | { type: 'updated'; path: string }
-    | { type: 'bundled'; buffer: ArrayBuffer };
+type OutLoaded = { type: 'loaded'; tree: { path: string; size?: number }[] };
+
+type OutFileText = {
+    type: 'file';
+    path: string;
+    isBinary: false;
+    text: string;
+};
+
+type OutFileBinary = {
+    type: 'file';
+    path: string;
+    isBinary: true;
+    buffer: ArrayBuffer; // ✅ Transferable
+};
+
+type OutUpdated = { type: 'updated'; path: string };
+type OutBundled = { type: 'bundled'; buffer: ArrayBuffer };
+type Out = OutLoaded | OutFileText | OutFileBinary | OutUpdated | OutBundled;
+
+// ==============================
+// State
+// ==============================
+const files = new Map<string, Entry>();
 
 const normalize = (p: string) => p.replace(/^\/+/, '').replace(/\\/g, '/');
 
-self.onmessage = (e) => {
+// ==============================
+// Worker
+// ==============================
+self.onmessage = (e: MessageEvent<InMsg>) => {
     const msg = e.data;
     try {
+        // 1) ZIP 로드
         if (msg.type === 'loadZip') {
             files.clear();
-            const u = unzipSync(new Uint8Array(msg.buffer));
+            const unzipped = unzipSync(new Uint8Array(msg.buffer));
             const tree: { path: string; size?: number }[] = [];
 
-            for (const [rawPath, bytes] of Object.entries(u)) {
+            for (const [rawPath, bytes] of Object.entries(unzipped)) {
                 const path = normalize(rawPath);
-                const isBin = isProbablyBinary(bytes, path);
-                files.set(path, { path, bytes, isBinary: isBin });
+                const { kind } = decideFileKind(path, bytes, { treatSvgAsText: true });
+                files.set(path, { path, bytes, kind });
                 tree.push({ path, size: bytes.byteLength });
             }
-            postMessage({ type: 'loaded', tree }, undefined);
+
+            postMessage(<Out>{ type: 'loaded', tree }, undefined);
         }
 
+        // 2) 파일 조회
         if (msg.type === 'getFile') {
             const key = normalize(msg.path);
             const fe = files.get(key);
             if (!fe) throw new Error('not found');
 
-            if (fe.isBinary) {
-                // ✅ 원본을 보존하기 위해 복제본을 만들어 전송
-                const copy = fe.bytes.slice(); // Uint8Array 복제
-                postMessage(
-                    { type: 'file', path: fe.path, isBinary: true, buffer: copy.buffer },
-                    [copy.buffer] // ✅ Transferable 로 복사본을 이동 (원본은 유지)
-                );
-            } else {
+            if (fe.kind === 'text') {
                 const text = strFromU8(fe.bytes);
-                postMessage({ type: 'file', path: fe.path, isBinary: false, text }, undefined);
+                postMessage(<OutFileText>{ type: 'file', path: fe.path, isBinary: false, text }, undefined);
+            } else {
+                const copy = fe.bytes.slice(); // 원본 보존
+                postMessage(<OutFileBinary>{ type: 'file', path: fe.path, isBinary: true, buffer: copy.buffer }, [copy.buffer]);
             }
         }
 
+        // 3) 텍스트 업데이트
         if (msg.type === 'updateFile') {
             const key = normalize(msg.path);
             const fe = files.get(key);
             if (!fe) throw new Error('not found');
+
             fe.bytes = strToU8(msg.text);
-            fe.isBinary = false;
-            postMessage({ type: 'updated', path: fe.path }, undefined);
+            fe.kind = 'text';
+            postMessage(<OutUpdated>{ type: 'updated', path: fe.path }, undefined);
         }
 
+        // 4) ZIP 번들
         if (msg.type === 'buildZip') {
             const o: Record<string, Uint8Array> = {};
             for (const [p, fe] of files) o[p] = fe.bytes;
+
             const zipped = zipSync(o);
-            postMessage({ type: 'bundled', buffer: zipped.buffer }, [zipped.buffer]);
+            postMessage(<OutBundled>{ type: 'bundled', buffer: zipped.buffer }, [zipped.buffer]);
         }
     } catch (err) {
         console.error(err);
