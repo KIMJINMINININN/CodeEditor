@@ -4,6 +4,7 @@ import { useMemo, useCallback, useEffect, useRef, useState } from "react";
 import { useFsStore } from "../../store/useFsStore";
 import { fetchFileTab, loadZip } from "../../lib/zipClient";
 import { flattenVisible, type FlatNode } from "../../lib/flattenTree";
+import { BAR_H } from "../../styles/layout";
 
 const ICON = 16;
 
@@ -217,63 +218,56 @@ export function FileTree() {
           <i className="codicon codicon-trash" /> 삭제
         </button>
       </Toolbar>
-      <Virtuoso
-        ref={listRef}
-        data={data}
-        itemContent={(index, n) => {
-          const isOpen = !!expanded[n.path];
-          const twisty =
-            n.type === "folder" ? (
+      <TreeBody>
+        <Virtuoso
+          ref={listRef}
+          data={data}
+          style={{ height: "100%" }}
+          itemContent={(index, n) => {
+            const isOpen = !!expanded[n.path];
+            const twisty =
+              n.type === "folder" ? (
+                <i
+                  className={`codicon ${isOpen ? "codicon-chevron-down" : "codicon-chevron-right"} twisty`}
+                />
+              ) : (
+                <span className="twisty" />
+              );
+            const kind = (
               <i
-                className={`codicon ${isOpen ? "codicon-chevron-down" : "codicon-chevron-right"} twisty`}
+                className={`codicon ${
+                  n.type === "folder"
+                    ? isOpen
+                      ? "codicon-folder-opened"
+                      : "codicon-folder"
+                    : "codicon-file"
+                } kind`}
               />
-            ) : (
-              <span className="twisty" />
             );
-          const kind = (
-            <i
-              className={`codicon ${
-                n.type === "folder"
-                  ? isOpen
-                    ? "codicon-folder-opened"
-                    : "codicon-folder"
-                  : "codicon-file"
-              } kind`}
-            />
-          );
-          const active = n.path === activePath;
-          const focused = index === focusIdx;
-          return (
-            <Row
-              id={`tree-row-${index}`}
-              depth={n.depth}
-              active={active}
-              focused={focused}
-              tabIndex={focused ? 0 : -1}
-              onClick={() => onRowClick(n, index)}
-            >
-              {twisty}
-              {kind}
-              <span className="label">{n.name}</span>
-            </Row>
-          );
-        }}
-        increaseViewportBy={600}
-        overscan={200}
-        style={{ height: "100%" }}
-      />
+            const active = n.path === activePath;
+            const focused = index === focusIdx;
+            return (
+              <Row
+                id={`tree-row-${index}`}
+                depth={n.depth}
+                active={active}
+                focused={focused}
+                tabIndex={focused ? 0 : -1}
+                onClick={() => onRowClick(n, index)}
+              >
+                {twisty}
+                {kind}
+                <span className="label">{n.name}</span>
+              </Row>
+            );
+          }}
+          increaseViewportBy={600}
+          overscan={200}
+        />
+      </TreeBody>
     </Wrap>
   );
 }
-
-const Wrap = styled.div`
-  height: 100%;
-  overflow: hidden;
-  font-size: 13px;
-  color: ${({ theme }) => theme.text};
-  background: ${({ theme }) => theme.bg2};
-  outline: none;
-`;
 
 const Row = styled.div<{ active?: boolean; depth: number; focused: boolean }>`
   display: flex;
@@ -307,18 +301,32 @@ const Row = styled.div<{ active?: boolean; depth: number; focused: boolean }>`
   }
 `;
 
-const Toolbar = styled.div`
+const Wrap = styled.div`
   display: flex;
-  gap: 6px;
+  flex-direction: column; /* ✅ 칼럼 레이아웃 */
+  height: 100%;
+  overflow: hidden;
+  font-size: 13px;
+  color: ${({ theme }) => theme.text};
+  background: ${({ theme }) => theme.bg2};
+  outline: none;
+`;
+
+const Toolbar = styled.div`
+  height: ${BAR_H}px; /* ✅ 공통 높이 */
+  display: flex;
   align-items: center;
-  padding: 6px 8px;
+  gap: 6px;
+  padding: 0 8px; /* 수직 패딩 0 → 라인 정렬 */
   border-bottom: 1px solid ${({ theme }) => theme.border};
   background: ${({ theme }) => theme.bg2};
+
   button {
+    height: 24px; /* 바 안에서 균형 잡힌 버튼 높이 */
     display: inline-flex;
-    gap: 6px;
     align-items: center;
-    padding: 4px 8px;
+    gap: 6px;
+    padding: 0 8px;
     border-radius: 6px;
     border: 1px solid ${({ theme }) => theme.border};
     background: ${({ theme }) => theme.bg3};
@@ -327,4 +335,9 @@ const Toolbar = styled.div`
       filter: brightness(1.1);
     }
   }
+`;
+
+const TreeBody = styled.div`
+  flex: 1;
+  min-height: 0; /* ✅ 툴바 아래 영역을 모두 사용 */
 `;

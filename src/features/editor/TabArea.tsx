@@ -4,6 +4,7 @@ import { useFsStore } from "../../store/useFsStore";
 import { MonacoEditor } from "../../components/MonacoEditor";
 import { updateText } from "../../lib/zipClient";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { BAR_H } from "../../styles/layout";
 
 export function TabArea() {
   const {
@@ -149,22 +150,16 @@ const Wrap = styled.div`
 
 const TabsWrap = styled.div`
   position: relative;
-  height: 32px;
+  height: ${BAR_H}px; /* ✅ 공통 높이 */
   background: ${({ theme }) => theme.bg2};
   border-bottom: 1px solid ${({ theme }) => theme.border};
-
-  /* ✅ 가로 스크롤만 사용, 세로 스크롤은 차단 */
   overflow-x: auto;
   overflow-y: hidden;
-
-  /* ✅ 스크롤바 숨기기 (브라우저별) */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge Legacy */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   &::-webkit-scrollbar {
     display: none;
-  } /* Chrome/Safari */
-
-  overscroll-behavior: contain; /* 페이지 전체 스크롤 전파 방지 */
+  }
 `;
 
 const TabsInner = styled.div`
