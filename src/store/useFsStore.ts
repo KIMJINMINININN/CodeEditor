@@ -1,6 +1,7 @@
 // src/store/useFsStore.ts
 import { create } from "zustand";
 import { revokeIfBlobUrl } from "../lib/zipClient";
+import { expandedToDepth } from "../lib/expand";
 
 export type NodeType = "file" | "folder";
 export type TreeNode = {
@@ -51,10 +52,10 @@ export const useFsStore = create<State>((set, get) => ({
     })),
 
   setTree: (t) =>
-    set((s) => ({
+    set(() => ({
       tree: t,
-      // ✅ 루트는 기본 펼침
-      expanded: t ? { ...s.expanded, [t.path ?? "/"]: true } : s.expanded,
+      // ✅ ZIP 로드 시: 루트(0)와 1 Depth 폴더 모두 펼침
+      expanded: t ? expandedToDepth(t, 1) : {},
     })),
 
   openTab: (t) =>
