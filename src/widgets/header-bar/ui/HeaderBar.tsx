@@ -34,7 +34,6 @@ const Bar = styled.header`
 export default function HeaderBar() {
   const tree = useFsStore((s) => s.tree);
   const setTree = useFsStore((s) => s.setTree);
-  const get = useFsStore; // getState 사용을 위해 바인딩만
 
   const onUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -44,7 +43,7 @@ export default function HeaderBar() {
   };
 
   const flushAllOpenTextTabs = async () => {
-    const { tabs } = get.getState(); // ✅ 현재 스토어 스냅샷
+    const { tabs } = useFsStore.getState(); // ✅ 현재 스토어 스냅샷
     const tasks = tabs
       .filter((t) => t.kind === "text")
       .map((t) => updateText(t.path, t.content ?? ""));

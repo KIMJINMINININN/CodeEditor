@@ -115,8 +115,11 @@ const FileTree = memo(() => {
   const toggleExpanded = useFsStore((s) => s.toggleExpanded);
   const openTab = useFsStore((s) => s.openTab);
   const activePath = useFsStore((s) => s.activePath);
+  const newFile = useFsStore((s) => s.newFile);
+  const newFolder = useFsStore((s) => s.newFolder);
+  const deleteEntry = useFsStore((s) => s.deleteEntry);
+
   const setActive = useFsStore((s) => s.setActive);
-  const { newFile, newFolder, deleteEntry } = useFsStore();
 
   const data = useMemo<FlatNode[]>(
     () => (tree ? flattenVisible(tree, expanded) : []),
