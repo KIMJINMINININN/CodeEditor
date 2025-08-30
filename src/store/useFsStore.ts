@@ -2,6 +2,11 @@
 import { create } from "zustand";
 import { revokeIfBlobUrl } from "../lib/zipClient";
 import { expandedToDepth } from "../lib/expand";
+import { insertFile, insertFolder, removePath, uniqueName } from "../lib/tree";
+import {
+  createFile as apiCreateFile,
+  deletePath as apiDeletePath,
+} from "../lib/zipClient";
 
 export type NodeType = "file" | "folder";
 export type TreeNode = {
@@ -33,6 +38,10 @@ type State = {
   updateText: (path: string, content: string) => void;
   setActive: (path?: string) => void;
   setDragActive: (v: boolean) => void;
+
+  newFile: (baseOnPath?: string) => Promise<void>;
+  newFolder: (baseOnPath?: string) => Promise<void>;
+  deleteEntry: (targetPath: string) => Promise<void>;
 };
 
 export const useFsStore = create<State>((set, get) => ({
@@ -52,11 +61,7 @@ export const useFsStore = create<State>((set, get) => ({
     })),
 
   setTree: (t) =>
-    set(() => ({
-      tree: t,
-      // ✅ ZIP 로드 시: 루트(0)와 1 Depth 폴더 모두 펼침
-      expanded: t ? expandedToDepth(t, 1) : {},
-    })),
+    set(() => ({ tree: t, expanded: t ? expandedToDepth(t, 1) : {} })),
 
   openTab: (t) =>
     set((s) => ({
@@ -82,4 +87,81 @@ export const useFsStore = create<State>((set, get) => ({
     })),
   setActive: (p) => set({ activePath: p }),
   setDragActive: (v) => set({ dragActive: v }),
+
+  // ✅ 새 파일
+  newFile: async (baseOnPath) => {
+    const s = get();
+    if (!s.tree) return;
+    // 선택이 파일이면 그 부모, 폴더면 그 폴더, 없으면 루트
+    const base = baseOnPath || s.activePath || "/";
+    const parent = base.endsWith("/") ? base.slice(0, -1) : base;
+    const folder =
+      s.tree &&
+      baseOnPath &&
+      baseOnPath !== "/" &&
+      baseOnPath.split("/").pop()!.includes(".")
+        ? parent.substring(0, parent.lastIndexOf("/")) || "/"
+        : base === "/"
+          ? "/"
+          : parent;
+
+    const name = window.prompt("새 파일 이름", "untitled.txt");
+    if (!name) return;
+    const full = (folder === "/" ? "" : folder) + "/" + name;
+
+    await apiCreateFile(full, "");
+    set(({ tree, expanded }) => {
+      if (!tree) return {};
+      insertFile(tree, full);
+      return {
+        tree: { ...tree },
+        expanded: { ...expanded, [folder || "/"]: true },
+        activePath: full,
+      };
+    });
+  },
+
+  // ✅ 새 폴더
+  newFolder: async (baseOnPath) => {
+    const s = get();
+    if (!s.tree) return;
+    const base = baseOnPath || s.activePath || "/";
+    const isFile = base !== "/" && base.split("/").pop()!.includes(".");
+    const folderBase = isFile ? base.slice(0, base.lastIndexOf("/")) : base;
+    const name = window.prompt("새 폴더 이름", "new-folder");
+    if (!name) return;
+    const full = (folderBase === "/" ? "" : folderBase) + "/" + name;
+
+    // 비어 있는 폴더는 ZIP에 바로 안 남을 수 있어요(빈 폴더는 보존 안 되는 포맷도 있음).
+    // 필요하면 '.keep' 파일도 같이 생성하세요. (옵션)
+    set(({ tree, expanded }) => {
+      if (!tree) return {};
+      insertFolder(tree, full);
+      return {
+        tree: { ...tree },
+        expanded: { ...expanded, [folderBase || "/"]: true },
+      };
+    });
+  },
+
+  // ✅ 삭제(파일 또는 폴더)
+  deleteEntry: async (targetPath) => {
+    const s = get();
+    if (!s.tree) return;
+    if (!window.confirm(`${targetPath} 을(를) 삭제할까요?`)) return;
+
+    await apiDeletePath(targetPath);
+    set(({ tree, tabs, activePath }) => {
+      if (!tree) return {};
+      removePath(tree, targetPath);
+      // 열린 탭도 정리
+      const tabKept = tabs.filter(
+        (t) => !(t.path === targetPath || t.path.startsWith(targetPath + "/")),
+      );
+      const newActive = tabKept.find((t) => t.path === activePath)
+        ? activePath
+        : tabKept.at(-1)?.path;
+      return { tree: { ...tree }, tabs: tabKept, activePath: newActive };
+    });
+  },
 }));

@@ -115,6 +115,7 @@ export function FileTree() {
   const openTab = useFsStore((s) => s.openTab);
   const activePath = useFsStore((s) => s.activePath);
   const setActive = useFsStore((s) => s.setActive);
+  const { newFile, newFolder, deleteEntry } = useFsStore();
 
   const data = useMemo<FlatNode[]>(
     () => (tree ? flattenVisible(tree, expanded) : []),
@@ -194,10 +195,28 @@ export function FileTree() {
     }
   };
 
+  // 현재 포커스된 항목 경로
+  const focusedPath = data[focusIdx]?.path;
+
   if (!tree) return <EmptyState />;
 
   return (
     <Wrap tabIndex={0} onKeyDown={onKeyDown}>
+      <Toolbar>
+        <button onClick={() => newFile(focusedPath)} title="새 파일">
+          <i className="codicon codicon-new-file" /> 새 파일
+        </button>
+        <button onClick={() => newFolder(focusedPath)} title="새 폴더">
+          <i className="codicon codicon-new-folder" /> 새 폴더
+        </button>
+        <button
+          onClick={() => focusedPath && deleteEntry(focusedPath)}
+          disabled={!focusedPath}
+          title="삭제"
+        >
+          <i className="codicon codicon-trash" /> 삭제
+        </button>
+      </Toolbar>
       <Virtuoso
         ref={listRef}
         data={data}
@@ -285,5 +304,27 @@ const Row = styled.div<{ active?: boolean; depth: number; focused: boolean }>`
   }
   &:focus {
     outline: 1px solid ${({ theme }) => theme.accent};
+  }
+`;
+
+const Toolbar = styled.div`
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 8px;
+  border-bottom: 1px solid ${({ theme }) => theme.border};
+  background: ${({ theme }) => theme.bg2};
+  button {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid ${({ theme }) => theme.border};
+    background: ${({ theme }) => theme.bg3};
+    color: ${({ theme }) => theme.text};
+    &:hover {
+      filter: brightness(1.1);
+    }
   }
 `;

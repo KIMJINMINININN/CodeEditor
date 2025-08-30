@@ -94,3 +94,14 @@ export async function buildZip(): Promise<Blob> {
 export function revokeIfBlobUrl(url?: string) {
   if (url && url.startsWith("blob:")) URL.revokeObjectURL(url);
 }
+
+// 추가 함수
+export async function createFile(path: string, text = "") {
+  worker.postMessage({ type: "createFile", path: normalize(path), text });
+  await once("created");
+}
+
+export async function deletePath(path: string) {
+  worker.postMessage({ type: "deletePath", path: normalize(path) });
+  await once("deleted");
+}
