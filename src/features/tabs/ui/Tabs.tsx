@@ -1,12 +1,12 @@
 import styled from "styled-components";
 import { useEffect, useMemo, useRef } from "react";
-import { useFsStore } from "../../store/useFsStore";
-import { MonacoEditor } from "../../components/MonacoEditor";
-import { updateText } from "../../lib/zipClient";
+import { useFsStore } from "@entities/fs-tree";
+import { MonacoEditor } from "@shared/ui/monaco/MonacoEditor";
+import { updateText } from "@shared/api/zip";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { BAR_H } from "../../styles/layout";
+import { BAR_H } from "@shared/styles/layout";
 
-export function TabArea() {
+export default function TabArea() {
   const {
     tabs,
     activePath,

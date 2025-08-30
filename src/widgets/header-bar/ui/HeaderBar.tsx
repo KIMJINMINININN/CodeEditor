@@ -1,7 +1,7 @@
 // src/features/header/HeaderBar.tsx
 import styled from "styled-components";
-import { useFsStore } from "../../store/useFsStore";
-import { buildZip, loadZip, updateText } from "../../lib/zipClient";
+import { useFsStore } from "@entities/fs-tree";
+import { buildZip, loadZip, updateText } from "@shared/api/zip";
 
 const Bar = styled.header`
   display: flex;
@@ -31,7 +31,7 @@ const Bar = styled.header`
   }
 `;
 
-export function HeaderBar() {
+export default function HeaderBar() {
   const tree = useFsStore((s) => s.tree);
   const setTree = useFsStore((s) => s.setTree);
   const get = useFsStore; // getState 사용을 위해 바인딩만

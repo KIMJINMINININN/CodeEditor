@@ -1,5 +1,5 @@
 // src/lib/flattenTree.ts
-import type { TreeNode } from "../store/useFsStore";
+import type { TreeNode } from "@entities/fs-tree";
 
 export type FlatNode = {
   path: string;
