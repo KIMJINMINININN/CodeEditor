@@ -1,7 +1,7 @@
 // src/lib/zipClient.ts
-import type { TreeNode, Tab } from "../store/useFsStore";
-import { buildTree } from "./tree";
-import { guessLanguage, guessMime } from "./isBinary";
+import type { TreeNode, Tab } from "@entities/fs-tree";
+import { buildTree } from "@shared/lib/tree";
+import { guessLanguage, guessMime } from "@shared/lib/isBinary";
 
 const normalize = (p: string) => p.replace(/^\/+/, "").replace(/\\/g, "/");
 
@@ -11,7 +11,7 @@ const w = (globalThis as any)[WKEY] as Worker | undefined;
 const worker: Worker =
   w ??
   ((globalThis as any)[WKEY] = new Worker(
-    new URL("../worker/zip.worker.ts", import.meta.url),
+    new URL("@shared/workers/zip/zip.worker.ts", import.meta.url),
     { type: "module" },
   ));
 

@@ -1,10 +1,10 @@
 import styled from "styled-components";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { useMemo, useCallback, useEffect, useRef, useState } from "react";
-import { useFsStore } from "../../store/useFsStore";
-import { fetchFileTab, loadZip } from "../../lib/zipClient";
-import { flattenVisible, type FlatNode } from "../../lib/flattenTree";
-import { BAR_H } from "../../styles/layout";
+import { useFsStore } from "@entities/fs-tree";
+import { fetchFileTab, loadZip } from "@shared/api/zip";
+import { flattenVisible, type FlatNode } from "@entities/fs-tree/lib/flatten";
+import { BAR_H } from "@shared/styles/layout";
 
 const ICON = 16;
 
@@ -109,7 +109,7 @@ function EmptyState() {
   );
 }
 
-export function FileTree() {
+export default function FileTree() {
   const tree = useFsStore((s) => s.tree);
   const expanded = useFsStore((s) => s.expanded);
   const toggleExpanded = useFsStore((s) => s.toggleExpanded);

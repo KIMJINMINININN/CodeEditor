@@ -1,5 +1,5 @@
 // src/lib/expand.ts
-import type { TreeNode } from "../store/useFsStore";
+import type { TreeNode } from "@entities/fs-tree";
 
 /**
  * 폴더 노드를 maxDepth까지 펼친 상태로 반환합니다.

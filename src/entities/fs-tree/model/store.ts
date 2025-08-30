@@ -1,12 +1,17 @@
 // src/store/useFsStore.ts
 import { create } from "zustand";
-import { revokeIfBlobUrl } from "../lib/zipClient";
-import { expandedToDepth } from "../lib/expand";
-import { insertFile, insertFolder, removePath, uniqueName } from "../lib/tree";
+import { revokeIfBlobUrl } from "@shared/api/zip";
+import { expandedToDepth } from "@entities/fs-tree/lib/expand";
+import {
+  insertFile,
+  insertFolder,
+  removePath,
+  uniqueName,
+} from "@shared/lib/tree";
 import {
   createFile as apiCreateFile,
   deletePath as apiDeletePath,
-} from "../lib/zipClient";
+} from "@shared/api/zip";
 
 export type NodeType = "file" | "folder";
 export type TreeNode = {

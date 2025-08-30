@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 import { unzipSync, zipSync, strFromU8, strToU8 } from "fflate";
-import { decideFileKind } from "../lib/isBinary";
+import { decideFileKind } from "@shared/lib/isBinary";
 
 // ==============================
 // Types

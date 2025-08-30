@@ -1,4 +1,4 @@
-import type { TreeNode } from "../store/useFsStore";
+import type { TreeNode } from "@entities/fs-tree";
 
 export function buildTree(paths: { path: string; size?: number }[]): TreeNode {
   const root: TreeNode = { name: "/", path: "/", type: "folder", children: [] };

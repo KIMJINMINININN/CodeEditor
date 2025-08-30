@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-import { loadZip } from "../../lib/zipClient";
-import { useFsStore } from "../../store/useFsStore";
+import { loadZip } from "@shared/api/zip";
+import { useFsStore } from "@entities/fs-tree";
 
 export default function DropZone() {
   const [show, setShow] = useState(false);
