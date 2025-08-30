@@ -4,6 +4,7 @@ import styled, { createGlobalStyle } from "styled-components";
 import { HeaderBar } from "./features/header/HeaderBar";
 import { FileTree } from "./features/fs/FileTree";
 import { TabArea } from "./features/editor/TabArea";
+import DropZone from "./features/upload/DropZone";
 
 const GlobalStyle = createGlobalStyle`
     :root { color-scheme: dark; }
@@ -32,6 +33,7 @@ export default function App() {
           </Suspense>
         </Content>
       </Main>
+      <DropZone />
     </Shell>
   );
 }
