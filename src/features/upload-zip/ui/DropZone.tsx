@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import styled from "styled-components";
 import { loadZip } from "@shared/api/zip";
 import { useFsStore } from "@entities/fs-tree";
 
-export default function DropZone() {
+const DropZone = memo(() => {
   const [show, setShow] = useState(false);
   const setTree = useFsStore((s) => s.setTree);
   const setDragActive = useFsStore((s) => s.setDragActive);
@@ -64,7 +64,7 @@ export default function DropZone() {
       </Box>
     </Overlay>
   );
-}
+});
 
 const Overlay = styled.div<{ show: boolean }>`
   pointer-events: ${(p) => (p.show ? "auto" : "none")};
@@ -85,3 +85,5 @@ const Box = styled.div`
   border-radius: 12px;
   font-size: 14px;
 `;
+
+export default DropZone;

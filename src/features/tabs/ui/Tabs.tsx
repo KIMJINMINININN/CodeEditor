@@ -1,12 +1,12 @@
 import styled from "styled-components";
-import { useEffect, useMemo, useRef } from "react";
+import { memo, useEffect, useMemo, useRef } from "react";
 import { useFsStore } from "@entities/fs-tree";
 import { MonacoEditor } from "@shared/ui/monaco/MonacoEditor";
 import { updateText } from "@shared/api/zip";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { BAR_H } from "@shared/styles/layout";
 
-export default function TabArea() {
+const TabArea = memo(() => {
   const {
     tabs,
     activePath,
@@ -140,7 +140,7 @@ export default function TabArea() {
       </Body>
     </Wrap>
   );
-}
+});
 
 const Wrap = styled.div`
   height: 100%;
@@ -218,3 +218,5 @@ const Img = styled.img`
   max-height: 100%;
   object-fit: contain;
 `;
+
+export default TabArea;

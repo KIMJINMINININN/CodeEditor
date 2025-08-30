@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
-import { useMemo, useCallback, useEffect, useRef, useState } from "react";
+import { useMemo, useCallback, useEffect, useRef, useState, memo } from "react";
 import { useFsStore } from "@entities/fs-tree";
 import { fetchFileTab, loadZip } from "@shared/api/zip";
 import { flattenVisible, type FlatNode } from "@entities/fs-tree/lib/flatten";
@@ -109,7 +109,7 @@ function EmptyState() {
   );
 }
 
-export default function FileTree() {
+const FileTree = memo(() => {
   const tree = useFsStore((s) => s.tree);
   const expanded = useFsStore((s) => s.expanded);
   const toggleExpanded = useFsStore((s) => s.toggleExpanded);
@@ -267,7 +267,7 @@ export default function FileTree() {
       </TreeBody>
     </Wrap>
   );
-}
+});
 
 const Row = styled.div<{ active?: boolean; depth: number; focused: boolean }>`
   display: flex;
@@ -341,3 +341,5 @@ const TreeBody = styled.div`
   flex: 1;
   min-height: 0; /* ✅ 툴바 아래 영역을 모두 사용 */
 `;
+
+export default FileTree;
