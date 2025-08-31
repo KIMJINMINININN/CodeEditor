@@ -5,6 +5,19 @@ import FilePanel from "@widgets/file-panel";
 import EditorPanel from "@widgets/editor-panel";
 import DropZone from "@features/upload-zip";
 
+export default function WorkspacePage() {
+  return (
+    <Layout>
+      <HeaderBar />
+      <Body>
+        <FilePanel />
+        <EditorPanel />
+      </Body>
+      <DropZone />
+    </Layout>
+  );
+}
+
 const Layout = styled.div`
   display: grid;
   grid-template-rows: 56px 1fr;
@@ -20,16 +33,3 @@ const Body = styled.div`
   border-top: 1px solid
     ${({ theme }) => (theme as any)?.ui?.border ?? "rgba(255,255,255,0.08)"};
 `;
-
-export default function WorkspacePage() {
-  return (
-    <Layout>
-      <HeaderBar />
-      <Body>
-        <FilePanel />
-        <EditorPanel />
-      </Body>
-      <DropZone />
-    </Layout>
-  );
-}
