@@ -135,6 +135,8 @@ const FileTree = memo(() => {
         $focused={focused}
         tabIndex={focused ? 0 : -1}
         onClick={() => onRowClick(n, index)}
+        role="treeitem"
+        data-testid="tree-row"
       >
         {twisty}
         {kind}
@@ -149,7 +151,12 @@ const FileTree = memo(() => {
   if (!tree) return <EmptyState />;
 
   return (
-    <Wrap tabIndex={0} onKeyDown={onKeyDown}>
+    <Wrap
+      tabIndex={0}
+      onKeyDown={onKeyDown}
+      role="tree"
+      data-testid="file-tree"
+    >
       <Toolbar>
         <button onClick={() => newFile(focusedPath)} title="새 파일">
           <i className="codicon codicon-new-file" /> 새 파일

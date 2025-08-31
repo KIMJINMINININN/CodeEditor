@@ -18,7 +18,7 @@ const TabArea = memo(() => {
   const active = tabs[activeIndex] ?? tabs.at(-1);
 
   return (
-    <Wrap>
+    <Wrap data-testid="editor-panel">
       <TabBar active={active} activeIndex={activeIndex} />
       <EditorPane active={active} />
     </Wrap>
