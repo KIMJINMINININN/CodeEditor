@@ -2,10 +2,18 @@
 import styled from "styled-components";
 import { useFsStore } from "@entities/fs-tree";
 import { buildZip, loadZip, updateText } from "@shared/api/zip";
+import { useRef } from "react";
 
 export default function HeaderBar() {
   const tree = useFsStore((s) => s.tree);
   const setTree = useFsStore((s) => s.setTree);
+
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const onUploadClick = () => {
+    // 사용자 제스처 안에서 호출되므로 파일 선택 창이 정상 오픈
+    inputRef.current?.click();
+  };
 
   const onUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -46,10 +54,18 @@ export default function HeaderBar() {
   return (
     <Bar>
       <strong>Monaco ZIP Editor</strong>
-      <label className="icon-btn">
+      <button type="button" className="icon-btn" onClick={onUploadClick}>
         <i className="codicon codicon-cloud-upload" /> 파일 선택
-        <input type="file" accept=".zip" onChange={onUpload} hidden />
-      </label>
+      </button>
+
+      {/* 화면에 보이지 않지만 ref로 트리거 */}
+      <input
+        ref={inputRef}
+        type="file"
+        accept=".zip"
+        onChange={onUpload}
+        style={{ display: "none" }}
+      />
       <button className="icon-btn primary" onClick={onDownload}>
         <i className="codicon codicon-cloud-download" /> Download ZIP
       </button>
@@ -69,6 +85,7 @@ const Bar = styled.header`
     color: ${({ theme }) => theme.textMute};
   }
   .icon-btn {
+    cursor: pointer;
     display: inline-flex;
     gap: 6px;
     align-items: center;
