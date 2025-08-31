@@ -1,15 +1,15 @@
-import { memo, useEffect, useState } from "react";
 import styled from "styled-components";
-import { loadZip } from "@shared/api/zip";
+import React, { useEffect, useState } from "react";
 import { useFsStore } from "@entities/fs-tree";
 
-const DropZone = memo(() => {
+const DropZone = () => {
   const [show, setShow] = useState(false);
-  const setTree = useFsStore((s) => s.setTree);
   const setDragActive = useFsStore((s) => s.setDragActive);
-  // dragenter/leave 중첩 카운터로 깜빡임 방지
+  const setTree = useFsStore((s) => s.setTree);
+
   useEffect(() => {
     let counter = 0;
+
     const onDragOver = (e: DragEvent) => {
       e.preventDefault();
     };
@@ -19,7 +19,7 @@ const DropZone = memo(() => {
       setShow(true);
       setDragActive(true);
     };
-    const onDragLeave = () => {
+    const onDragLeave = (_e: DragEvent) => {
       counter = Math.max(0, counter - 1);
       if (counter === 0) {
         setShow(false);
@@ -28,18 +28,21 @@ const DropZone = memo(() => {
     };
     const onDrop = async (e: DragEvent) => {
       e.preventDefault();
-      counter = 0;
+      const files = Array.from(e.dataTransfer?.files ?? []);
       setShow(false);
       setDragActive(false);
-      const file = e.dataTransfer?.files?.[0];
-      if (!file) return;
-      if (!file.name.toLowerCase().endsWith(".zip")) {
+      if (files.length === 0) return;
+
+      const file = files[0];
+      if (!/\.zip$/i.test(file.name)) {
         alert("ZIP 파일만 업로드 가능합니다.");
         return;
       }
+      const { loadZip } = await import("@shared/api/zip");
       const tree = await loadZip(file);
       setTree(tree);
     };
+
     window.addEventListener("dragover", onDragOver);
     window.addEventListener("dragenter", onDragEnter);
     window.addEventListener("dragleave", onDragLeave);
@@ -50,40 +53,34 @@ const DropZone = memo(() => {
       window.removeEventListener("dragleave", onDragLeave);
       window.removeEventListener("drop", onDrop);
     };
-  }, [setTree]);
+  }, [setDragActive, setTree]);
+
   return (
-    <Overlay show={show}>
-      <Box>
-        <div style={{ textAlign: "center" }}>
-          <i
-            className="codicon codicon-cloud-upload"
-            style={{ fontSize: 24, marginRight: 8 }}
-          />
-          <strong>여기에 ZIP 파일을 드래그하여 업로드</strong>
-        </div>
-      </Box>
+    <Overlay data-testid="drop-overlay" aria-hidden={!show} $show={show}>
+      <div style={{ textAlign: "center" }}>
+        <i
+          className="codicon codicon-cloud-upload"
+          style={{ fontSize: 24, marginRight: 8 }}
+        />
+        <strong>여기에 ZIP 파일을 드래그하여 업로드</strong>
+      </div>
     </Overlay>
   );
-});
+};
 
-const Overlay = styled.div<{ show: boolean }>`
-  pointer-events: ${(p) => (p.show ? "auto" : "none")};
+const Overlay = styled.div.withConfig({
+  shouldForwardProp: (prop) => prop !== "$show",
+})<{ $show: boolean }>`
   position: fixed;
   inset: 0;
-  display: ${(p) => (p.show ? "flex" : "none")};
+  display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.35);
-  z-index: 9999;
-`;
-
-const Box = styled.div`
-  border: 2px dashed ${({ theme }) => theme.accent};
-  background: ${({ theme }) => theme.bg2};
-  color: ${({ theme }) => theme.text};
-  padding: 24px 32px;
-  border-radius: 12px;
-  font-size: 14px;
+  background: rgba(0, 0, 0, 0.45);
+  pointer-events: ${({ $show }) => ($show ? "auto" : "none")};
+  opacity: ${({ $show }) => ($show ? 1 : 0)};
+  transition: opacity 0.12s ease;
+  z-index: 1000;
 `;
 
 export default DropZone;

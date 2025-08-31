@@ -22,13 +22,13 @@ const EmptyWrap = styled.div`
   background: ${({ theme }) => theme.bg2};
 `;
 
-const DropHint = styled.div<{ active: boolean }>`
+const DropHint = styled.div<{ $active: boolean }>`
   width: calc(100% - 24px);
   height: 160px;
   border: 2px dashed
-    ${({ theme, active }) => (active ? theme.accent : theme.border)};
+    ${({ theme, $active }) => ($active ? theme.accent : theme.border)};
   border-radius: 12px;
-  background: ${({ theme, active }) => (active ? theme.bg3 : "transparent")};
+  background: ${({ theme, $active }) => ($active ? theme.bg3 : "transparent")};
   color: ${({ theme }) => theme.text};
   display: flex;
   flex-direction: column;
@@ -87,7 +87,7 @@ function EmptyState() {
       <DropHint
         role="button"
         tabIndex={0}
-        active={dragActive}
+        $active={dragActive}
         onClick={onClick}
         onKeyDown={onKeyDown}
         aria-label="ZIP 업로드"
@@ -252,9 +252,9 @@ const FileTree = memo(() => {
             return (
               <Row
                 id={`tree-row-${index}`}
-                depth={n.depth}
-                active={active}
-                focused={focused}
+                $depth={n.depth}
+                $active={active}
+                $focused={focused}
                 tabIndex={focused ? 0 : -1}
                 onClick={() => onRowClick(n, index)}
               >
@@ -272,12 +272,16 @@ const FileTree = memo(() => {
   );
 });
 
-const Row = styled.div<{ active?: boolean; depth: number; focused: boolean }>`
+const Row = styled.div<{
+  $active?: boolean;
+  $depth: number;
+  $focused: boolean;
+}>`
   display: flex;
   align-items: center;
-  padding: 3px 8px 3px calc(8px + ${(p) => p.depth * 14}px);
+  padding: 3px 8px 3px calc(8px + ${(p) => p.$depth * 14}px);
   height: 24px;
-  background: ${({ active, theme }) => (active ? theme.bg3 : "transparent")};
+  background: ${({ $active, theme }) => ($active ? theme.bg3 : "transparent")};
   cursor: pointer;
   user-select: none;
   &:hover {
