@@ -1,5 +1,16 @@
 import { test, expect } from "@playwright/test";
 import path from "path";
+import fs from "fs/promises";
+import { unzipSync } from "fflate";
+
+// --- helper: Monaco 안정 포커스 (그대로 재사용) ---
+async function focusMonacoEditor(page: import("@playwright/test").Page) {
+  const editor = page.locator(".monaco-editor").first();
+  await expect(editor).toBeVisible({ timeout: 15000 });
+  await editor.locator(".view-lines").first().click({ force: true });
+  const inputArea = editor.locator("textarea.inputarea").first();
+  await inputArea.evaluate((el) => el.focus());
+}
 
 test.describe("WorkspacePage E2E", () => {
   test.beforeEach(async ({ page }) => {
@@ -90,5 +101,57 @@ test.describe("WorkspacePage E2E", () => {
       "aria-hidden",
       "true",
     );
+  });
+
+  test("Zip 파일 업로드, 수정 후 다운로드 (E2E)", async ({ page }) => {
+    // 1) 업로드
+    const zipPath = path.resolve(__dirname, "fixtures/sample.zip");
+    await page.goto("/");
+    await page.setInputFiles("#zipInput", zipPath);
+
+    // 2) 트리 가시성 대기 및 'src' 폴더 펼치기
+    const tree = page.getByTestId("file-tree");
+    await expect(tree).toBeVisible({ timeout: 15000 });
+
+    // src 폴더가 접혀 있다면 펼치기 (WAI-ARIA Right x2)
+    const srcRow = tree.getByText(/^src$/, { exact: true });
+    if (await srcRow.count()) {
+      await srcRow.first().click();
+      await srcRow.first().press("ArrowRight"); // expand
+      await srcRow.first().press("ArrowRight"); // focus first child
+    }
+
+    // 3) 항상 App.tsx를 연다 (픽스처 기준으로 존재가 보장됨)
+    const appTsx = tree.getByText(/^App\.tsx$/, { exact: true }).first();
+    await appTsx.scrollIntoViewIfNeeded();
+    await appTsx.click();
+
+    // 4) Monaco에 안전 포커스 후 편집
+    await focusMonacoEditor(page);
+    await page.keyboard.insertText(" E2E!"); // insertText가 타이핑보다 안정적
+    await page.waitForTimeout(250); // 워커 반영 여유
+
+    // 5) 다운로드
+    const [download] = await Promise.all([
+      page.waitForEvent("download"),
+      page.getByTestId("download-btn").click(),
+    ]);
+    expect(download.suggestedFilename()).toBe("edited.zip");
+
+    // 6) zip에서 'src/App.tsx'를 직접 읽어 검증
+    const outDir = path.resolve(__dirname, "artifacts");
+    await fs.mkdir(outDir, { recursive: true });
+    const outZip = path.join(outDir, `edited-${Date.now()}.zip`);
+    await download.saveAs(outZip);
+
+    const buf = await fs.readFile(outZip);
+    const u = unzipSync(new Uint8Array(buf));
+    const key = Object.keys(u).find((k) =>
+      k.replace(/\\/g, "/").endsWith("src/App.tsx"),
+    );
+    if (!key) throw new Error("zip 내에 src/App.tsx 엔트리를 찾지 못했습니다.");
+
+    const text = new TextDecoder("utf-8").decode(u[key]);
+    expect(text).toContain("E2E!");
   });
 });
