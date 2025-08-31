@@ -5,108 +5,13 @@ import { useFsStore } from "@entities/fs-tree";
 import { fetchFileTab, loadZip } from "@shared/api/zip";
 import { flattenVisible, type FlatNode } from "@entities/fs-tree/lib/flatten";
 import { BAR_H } from "@shared/styles/layout";
+import EmptyState from "@features/filetree/ui/EmptyState";
 
 const ICON = 16;
 
 function parentPathOf(path: string) {
   const i = path.lastIndexOf("/");
   return i <= 0 ? "/" : path.slice(0, i);
-}
-
-const EmptyWrap = styled.div`
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px;
-  background: ${({ theme }) => theme.bg2};
-`;
-
-const DropHint = styled.div<{ $active: boolean }>`
-  width: calc(100% - 24px);
-  height: 160px;
-  border: 2px dashed
-    ${({ theme, $active }) => ($active ? theme.accent : theme.border)};
-  border-radius: 12px;
-  background: ${({ theme, $active }) => ($active ? theme.bg3 : "transparent")};
-  color: ${({ theme }) => theme.text};
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  text-align: center;
-  cursor: pointer;
-  user-select: none;
-  transition:
-    border-color 0.15s ease,
-    background-color 0.15s ease,
-    transform 0.05s ease;
-  &:hover {
-    border-color: ${({ theme }) => theme.accent};
-  }
-  &:active {
-    transform: scale(0.995);
-  }
-  .title {
-    font-weight: 600;
-  }
-  .sub {
-    color: ${({ theme }) => theme.textMute};
-    font-size: 12px;
-  }
-`;
-
-function EmptyState() {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const dragActive = useFsStore((s) => s.dragActive);
-  const setTree = useFsStore((s) => s.setTree);
-
-  const onClick = () => fileInputRef.current?.click();
-  const onChange: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    if (!f.name.toLowerCase().endsWith(".zip")) {
-      alert("ZIP 파일만 업로드 가능합니다.");
-      return;
-    }
-    const t = await loadZip(f);
-    setTree(t);
-  };
-
-  // 키보드 접근성
-  const onKeyDown: React.KeyboardEventHandler<HTMLDivElement> = (e) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      onClick();
-    }
-  };
-
-  return (
-    <EmptyWrap>
-      <DropHint
-        role="button"
-        tabIndex={0}
-        $active={dragActive}
-        onClick={onClick}
-        onKeyDown={onKeyDown}
-        aria-label="ZIP 업로드"
-      >
-        <i className="codicon codicon-cloud-upload" style={{ fontSize: 28 }} />
-        <div className="title">
-          {dragActive ? "여기에 드롭하여 업로드" : "ZIP을 업로드하세요"}
-        </div>
-        <div className="sub">드래그&드롭 또는 클릭하여 파일 선택</div>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".zip"
-          hidden
-          onChange={onChange}
-        />
-      </DropHint>
-    </EmptyWrap>
-  );
 }
 
 const FileTree = memo(() => {
@@ -199,6 +104,45 @@ const FileTree = memo(() => {
     }
   };
 
+  const itemContent = (index: any, n: any) => {
+    const isOpen = expanded[n.path];
+    const twisty =
+      n.type === "folder" ? (
+        <i
+          className={`codicon ${isOpen ? "codicon-chevron-down" : "codicon-chevron-right"} twisty`}
+        />
+      ) : (
+        <span className="twisty" />
+      );
+    const kind = (
+      <i
+        className={`codicon ${
+          n.type === "folder"
+            ? isOpen
+              ? "codicon-folder-opened"
+              : "codicon-folder"
+            : "codicon-file"
+        } kind`}
+      />
+    );
+    const active = n.path === activePath;
+    const focused = index === focusIdx;
+    return (
+      <Row
+        id={`tree-row-${index}`}
+        $depth={n.depth}
+        $active={active}
+        $focused={focused}
+        tabIndex={focused ? 0 : -1}
+        onClick={() => onRowClick(n, index)}
+      >
+        {twisty}
+        {kind}
+        <span className="label">{n.name}</span>
+      </Row>
+    );
+  };
+
   // 현재 포커스된 항목 경로
   const focusedPath = data[focusIdx]?.path;
 
@@ -226,44 +170,7 @@ const FileTree = memo(() => {
           ref={listRef}
           data={data}
           style={{ height: "100%" }}
-          itemContent={(index, n) => {
-            const isOpen = !!expanded[n.path];
-            const twisty =
-              n.type === "folder" ? (
-                <i
-                  className={`codicon ${isOpen ? "codicon-chevron-down" : "codicon-chevron-right"} twisty`}
-                />
-              ) : (
-                <span className="twisty" />
-              );
-            const kind = (
-              <i
-                className={`codicon ${
-                  n.type === "folder"
-                    ? isOpen
-                      ? "codicon-folder-opened"
-                      : "codicon-folder"
-                    : "codicon-file"
-                } kind`}
-              />
-            );
-            const active = n.path === activePath;
-            const focused = index === focusIdx;
-            return (
-              <Row
-                id={`tree-row-${index}`}
-                $depth={n.depth}
-                $active={active}
-                $focused={focused}
-                tabIndex={focused ? 0 : -1}
-                onClick={() => onRowClick(n, index)}
-              >
-                {twisty}
-                {kind}
-                <span className="label">{n.name}</span>
-              </Row>
-            );
-          }}
+          itemContent={(index, n) => itemContent(index, n)}
           increaseViewportBy={600}
           overscan={200}
         />

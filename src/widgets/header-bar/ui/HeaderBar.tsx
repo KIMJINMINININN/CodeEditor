@@ -54,19 +54,29 @@ export default function HeaderBar() {
   return (
     <Bar>
       <strong>Monaco ZIP Editor</strong>
-      <button type="button" className="icon-btn" onClick={onUploadClick}>
+      <button
+        data-testid="upload-btn"
+        type="button"
+        className="icon-btn"
+        onClick={onUploadClick}
+      >
         <i className="codicon codicon-cloud-upload" /> 파일 선택
       </button>
 
       {/* 화면에 보이지 않지만 ref로 트리거 */}
       <input
         ref={inputRef}
+        id="zipInput"
         type="file"
         accept=".zip"
         onChange={onUpload}
         style={{ display: "none" }}
       />
-      <button className="icon-btn primary" onClick={onDownload}>
+      <button
+        data-testid="download-btn"
+        className="icon-btn primary"
+        onClick={onDownload}
+      >
         <i className="codicon codicon-cloud-download" /> Download ZIP
       </button>
     </Bar>
