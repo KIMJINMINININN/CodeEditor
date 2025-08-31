@@ -12,8 +12,13 @@ const Layout = styled.div`
 `;
 const Body = styled.div`
   display: grid;
-  grid-template-columns: 280px 1fr;
-  min-height: 0;
+  grid-template-columns: 280px 1fr; /* 예: 좌측 패널 + 에디터 */
+  height: calc(100vh - 40px); /* 헤더 높이에 맞춰 조절 */
+  overflow: hidden;
+
+  /* 🔽 여기 한 줄만 추가 */
+  border-top: 1px solid
+    ${({ theme }) => (theme as any)?.ui?.border ?? "rgba(255,255,255,0.08)"};
 `;
 
 export default function WorkspacePage() {
