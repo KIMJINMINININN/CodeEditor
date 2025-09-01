@@ -1,0 +1,1 @@
+export { WorkerZipAdapter } from './adapter';

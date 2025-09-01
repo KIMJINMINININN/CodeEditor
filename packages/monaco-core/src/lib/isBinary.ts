@@ -1,4 +1,11 @@
 export type BinaryOptions = { treatSvgAsText?: boolean };
+
+export function decideFileKind(path: string, bytes: Uint8Array, opts?: {treatSvgAsText?: boolean}) {
+    // ...간단 구현(스텁)
+    return isProbablyBinary(bytes, path, opts) ? "binary" : "text";
+}
+
+
 export function isProbablyBinary(bytes: Uint8Array, path: string, opt: BinaryOptions = { treatSvgAsText: true }) {
     const lower = path.toLowerCase();
     if (/\.(png|jpg|jpeg|gif|webp|ico|bmp)$/i.test(lower)) return true;

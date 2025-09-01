@@ -1,0 +1,22 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "declarationMap": false,
+    "emitDeclarationOnly": false,
+    "outDir": "dist",
+    "rootDir": "src",
+    "skipLibCheck": true,
+    "target": "es2022",        // at() 등 최신 빌트인 사용시
+    "moduleResolution": "bundler"
+  },
+  "include": ["src/**/*"],
+  "exclude": [
+    "dist",
+    "node_modules",
+    "**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
+}

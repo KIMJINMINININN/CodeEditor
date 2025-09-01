@@ -1,20 +1,27 @@
 {
   "name": "@org/monaco-suite",
   "private": true,
-  "workspaces": ["packages/*", "examples/*"],
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ],
   "scripts": {
-    "build": "npm run -ws build",
+    "build": "npm run build -w @org/monaco-core && npm run build -w @org/monaco-react && npm run build -w @org/monaco-zip",
     "dev:example": "npm -w examples/webpack-app run dev",
     "test": "npm run -ws test",
     "typecheck": "tsc -b --pretty",
     "e2e": "playwright test -c playwright.config.ts"
   },
   "devDependencies": {
-    "typescript": "^5.5.4",
-    "tsup": "^8.0.1",
-    "jest": "^29.7.0",
-    "@testing-library/react": "^14.3.0",
     "@testing-library/jest-dom": "^6.5.0",
-    "playwright": "^1.47.0"
+    "@testing-library/react": "^14.3.0",
+    "jest": "^29.7.0",
+    "playwright": "^1.47.0",
+    "rimraf": "^6.0.1",
+    "tsup": "^8.0.1",
+    "typescript": "^5.5.4",
+    "@org/monaco-core": "workspace:*",
+    "@org/monaco-zip": "workspace:*",
+    "@org/monaco-react": "workspace:*"
   }
 }

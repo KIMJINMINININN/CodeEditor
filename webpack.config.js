@@ -23,6 +23,7 @@ module.exports = {
       "@features": path.resolve(__dirname, "src/features"),
       "@entities": path.resolve(__dirname, "src/entities"),
       "@shared": path.resolve(__dirname, "src/shared"),
+      '@entities/fs-tree': path.resolve(__dirname, 'src/entities/fs-tree/index.ts'),
     },
   },
   module: {
