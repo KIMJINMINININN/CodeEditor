@@ -1,6 +1,9 @@
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin");
+const BundleAnalyzerPlugin =
+  require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
+const WebpackBar = require("webpackbar");
 
 module.exports = {
   entry: "./src/main.tsx",
@@ -47,6 +50,18 @@ module.exports = {
         "html",
       ],
       features: ["!gotoSymbol"],
+    }),
+    new WebpackBar({
+      name: "Main",
+      color: "cyan",
+      basic: true,
+      profile: true,
+    }),
+
+    new BundleAnalyzerPlugin({
+      analyzerMode: "static", // HTML 보고서 생성
+      openAnalyzer: false, // 자동으로 브라우저 오픈 안 함
+      reportFilename: "bundle-report.html",
     }),
   ],
   output: {

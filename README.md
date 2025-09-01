@@ -1,26 +1,3 @@
-### option 추가
-1. zip 파일 업로드시에, root 리렉토리 바로 아래에 있는 1depth에 있는 폴더들은 다볼수있게끔 추가
-2. 디자인 제공해준 이미지와 비슷하게 수정 및 아이콘 수정
-3. 새파일, 새폴더, 삭제 기능 추가
-
-### 해보고싶은것
-1. 파일 드래그 앤 드롭으로 폴더간에 이동시키기.
-2. 
-
-
-## Test
-```
-📌 2) FSD에서 테스트 파일 배치 규칙(추천)
-페이지(Unit): src/pages/workspace/ui/__tests__/WorkspacePage.test.tsx
-위젯(Unit): src/widgets/<widget>/ui/__tests__/*.test.tsx
-피처(Unit): src/features/<feature>/ui/__tests__/*.test.tsx
-엔티티(Unit): src/entities/<entity>/model/__tests__/*.test.ts (store/selector 로직)
-공용 테스트 유틸: src/shared/test/render.tsx, src/setupTests.ts
-```
-
-
------
-
 # Monaco ZIP Editor
 
 ZIP을 업로드/열람/편집/재압축하여 다운로드할 수 있는 **React 18 기반** 미니 IDE.
@@ -309,3 +286,11 @@ npm run test:e2e
 - Playwright 문서/가이드: 텍스트 엔진 셀렉터, 다운로드 아티팩트 확인, 비동기 렌더 대기 패턴 적용.
 - JSDOM 한계: 네비게이션/레이아웃 일부 미구현 → mock 및 경고 억제를 통해 테스트 안정화.
 - Monaco Editor 권장 패턴: 렌더 레이어와 입력 타깃 분리 구조를 고려해 **`.view-lines` 클릭 → `inputarea.focus()`** 후 입력하는 접근 방식이 안정적입니다.
+
+## Bundle size
+![img.png](public/img/img.png)
+
+## ✅ 진행하지못한것
+branch feat/manaco-suite에 외부에서
+사용한다면 package화 하여서 제공하려 하였으나, 시간 부족으로
+진행이 불가했던것.
