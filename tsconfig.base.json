@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "declaration": true,
+    "emitDeclarationOnly": false,
+    "jsx": "react-jsx",
+    "types": ["jest", "node"],
+    "baseUrl": ".",
+    "paths": {
+      "@org/monaco-core/*": ["packages/monaco-core/src/*"],
+      "@org/monaco-react/*": ["packages/monaco-react/src/*"],
+      "@org/monaco-zip/*": ["packages/monaco-zip/src/*"]
+    }
+  }
+}

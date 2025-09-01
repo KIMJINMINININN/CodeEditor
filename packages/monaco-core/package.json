@@ -1,0 +1,16 @@
+{
+  "name": "@org/monaco-core",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
+  "sideEffects": false,
+  "peerDependencies": {
+    "zustand": "^4.5.2",
+    "@tanstack/react-query": "^5.56.2"
+  },
+  "devDependencies": { "tsup": "^8.0.1", "typescript": "^5.5.4" },
+  "scripts": { "build": "tsup src/index.ts --dts --format esm --clean", "test": "jest -c ../../jest.config.base.ts" }
+}
