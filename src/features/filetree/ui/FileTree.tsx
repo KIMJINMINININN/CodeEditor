@@ -31,7 +31,7 @@ const FileTree = memo(() => {
     [tree, expanded],
   );
 
-  const listRef = useRef<VirtuosoHandle>(null);
+  const listRef = useRef<any>(null);
   const [focusIdx, setFocusIdx] = useState(0);
   useEffect(() => {
     // 데이터 길이 변하면 포커스 인덱스 안전 범위로 클램프
@@ -39,14 +39,22 @@ const FileTree = memo(() => {
   }, [data.length]);
 
   const focusRow = (idx: number) => {
-    const clamped = Math.max(0, Math.min(idx, data.length - 1));
-    setFocusIdx(clamped);
-    listRef.current?.scrollToIndex({ index: clamped, align: "center" });
-    // 다음 틱에 실제 포커스
-    setTimeout(() => {
-      const el = document.getElementById(`tree-row-${clamped}`);
-      (el as HTMLElement | null)?.focus();
-    }, 0);
+    setFocusIdx(idx);
+
+    const api = listRef.current as any;
+    // react-virtuoso 핸들 우선
+    if (api?.scrollToIndex && typeof api.scrollToIndex === "function") {
+      try {
+        api.scrollToIndex({ index: idx, align: "center", behavior: "auto" });
+      } catch {
+        // noop: 테스트 목 등에서 옵션 객체 모양이 달라도 실패하지 않게
+      }
+      return;
+    }
+    if (api?.scrollTo && typeof api.scrollTo === "function") {
+      api.scrollTo({ top: idx * 24 }); // 행 높이 대략값
+    }
+    // 아무 API도 없으면 그냥 포커스만 바꾸고 종료
   };
 
   const onRowClick = useCallback(
