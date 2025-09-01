@@ -309,3 +309,11 @@ npm run test:e2e
 - Playwright 문서/가이드: 텍스트 엔진 셀렉터, 다운로드 아티팩트 확인, 비동기 렌더 대기 패턴 적용.
 - JSDOM 한계: 네비게이션/레이아웃 일부 미구현 → mock 및 경고 억제를 통해 테스트 안정화.
 - Monaco Editor 권장 패턴: 렌더 레이어와 입력 타깃 분리 구조를 고려해 **`.view-lines` 클릭 → `inputarea.focus()`** 후 입력하는 접근 방식이 안정적입니다.
+
+## Bundle size
+![img.png](public/img/img.png)
+
+## ✅ 진행하지못한것
+branch feat/manaco-suite에 외부에서
+사용한다면 package화 하여서 제공하려 하였으나, 시간 부족으로
+진행이 불가했던것.
