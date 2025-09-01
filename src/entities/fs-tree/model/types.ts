@@ -1,4 +1,3 @@
-// src/entities/fs-tree/model/types.ts
 export type NodeType = "file" | "folder";
 export type TreeNode = {
   name: string;

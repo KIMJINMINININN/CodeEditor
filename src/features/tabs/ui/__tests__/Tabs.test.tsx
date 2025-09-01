@@ -3,10 +3,8 @@ import React from "react";
 import { screen } from "@testing-library/react";
 import { renderWithProviders } from "@shared/test/render";
 
-// SUT (경로 확인)
 import Tabs from "../Tabs";
 
-// src/features/tabs/ui/__tests__/Tabs.test.tsx (또는 공통 mock 유틸)
 const storeSnapshot: any = {
   tabs: [],
   activePath: undefined,
@@ -15,7 +13,6 @@ const storeSnapshot: any = {
 jest.mock("@entities/fs-tree/model/store", () => {
   const listeners = new Set<(s: any) => void>();
 
-  // zustand useStore 모양 흉내: 0/1/2-arg 지원
   const useFsStore = (selector?: any, _equalityFn?: any) => {
     const state = storeSnapshot;
     if (typeof selector === "function") return selector(state);
@@ -23,7 +20,6 @@ jest.mock("@entities/fs-tree/model/store", () => {
     return state;
   };
 
-  // getState/setState/subscribe까지 얕게 구현해 두면 유용
   (useFsStore as any).getState = () => storeSnapshot;
   (useFsStore as any).setState = (patch: any) => {
     const next = typeof patch === "function" ? patch(storeSnapshot) : patch;

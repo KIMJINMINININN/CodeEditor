@@ -1,4 +1,3 @@
-// src/components/MonacoEditor.tsx (변경)
 import * as monaco from "monaco-editor";
 import { useEffect, useRef } from "react";
 
@@ -15,12 +14,11 @@ export function MonacoEditor({
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 
   useEffect(() => {
-    // ✅ 테마 정의 (Dark+ 근접)
     monaco.editor.defineTheme("dark-plus-custom", {
       base: "vs-dark",
       inherit: true,
       rules: [
-        { token: "comment", foreground: "6A9955" }, // 녹색 톤 주석
+        { token: "comment", foreground: "6A9955" },
         { token: "keyword", foreground: "C586C0" },
         { token: "string", foreground: "CE9178" },
         { token: "number", foreground: "B5CEA8" },

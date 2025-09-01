@@ -3,7 +3,6 @@ import path from "path";
 import fs from "fs/promises";
 import { unzipSync } from "fflate";
 
-// --- helper: Monaco 안정 포커스 (그대로 재사용) ---
 async function focusMonacoEditor(page: import("@playwright/test").Page) {
   const editor = page.locator(".monaco-editor").first();
   await expect(editor).toBeVisible({ timeout: 15000 });

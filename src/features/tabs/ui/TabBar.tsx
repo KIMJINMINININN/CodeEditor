@@ -12,16 +12,14 @@ interface TabBarProps {
 const TabBar = memo(({ active, activeIndex }: TabBarProps) => {
   const { tabs, activePath, closeTab, setActive } = useFsStore();
 
-  // 수평 가상화기
   const virtual = useVirtualizer({
     horizontal: true,
     count: tabs.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: () => 140, // 탭 평균 너비 추정치
+    estimateSize: () => 140,
     overscan: 5,
   });
 
-  // 활성 탭을 가시 영역으로 자동 스크롤
   useEffect(() => {
     if (activeIndex >= 0) virtual.scrollToIndex(activeIndex, { align: "auto" });
   }, [activeIndex]);
@@ -31,7 +29,6 @@ const TabBar = memo(({ active, activeIndex }: TabBarProps) => {
   const onWheelHoriz: React.WheelEventHandler<HTMLDivElement> = (e) => {
     const el = scrollRef.current;
     if (!el) return;
-    // 세로 스크롤 입력이 더 크면 가로 스크롤로 전환
     if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
       el.scrollLeft += e.deltaY;
       e.preventDefault();
@@ -108,7 +105,7 @@ export default TabBar;
 
 const TabsWrap = styled.div`
   position: relative;
-  height: ${BAR_H}px; /* ✅ 공통 높이 */
+  height: ${BAR_H}px;
   background: ${({ theme }) => theme.bg2};
   border-bottom: 1px solid ${({ theme }) => theme.border};
   overflow-x: auto;
@@ -134,7 +131,6 @@ const TabItem = styled.button<{ active: boolean; x: number; size: number }>`
   display: flex;
   align-items: center;
   gap: 6px;
-  /* 🔹 우측에 X가 들어갈 공간 확보 */
   padding: 0 26px 0 10px;
 
   border: 1px solid ${({ theme }) => theme.border};

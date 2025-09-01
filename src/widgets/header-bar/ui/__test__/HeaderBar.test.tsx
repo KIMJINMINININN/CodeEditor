@@ -16,7 +16,7 @@ jest.mock("@shared/api/zip", () => ({
 jest.spyOn(URL, "createObjectURL").mockImplementation(() => "blob://test");
 jest.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
 jest.spyOn(window, "alert").mockImplementation(() => {});
-jest.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {}); // ✅ 핵심
+jest.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
 
 describe("HeaderBar (unit)", () => {
   beforeEach(() => jest.clearAllMocks());

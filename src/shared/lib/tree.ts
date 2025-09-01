@@ -26,7 +26,6 @@ export function buildTree(paths: { path: string; size?: number }[]): TreeNode {
       cur = child;
     }
   }
-  // 폴더 내 정렬: 폴더 우선, 이름순
   const sort = (n: TreeNode) => {
     if (!n.children) return;
     n.children.sort((a, b) =>

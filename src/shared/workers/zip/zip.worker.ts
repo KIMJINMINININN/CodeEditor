@@ -1,10 +1,6 @@
-/// <reference lib="webworker" />
 import { unzipSync, zipSync, strFromU8, strToU8 } from "fflate";
 import { decideFileKind } from "@shared/lib/isBinary";
 
-// ==============================
-// Types
-// ==============================
 type Entry = {
   path: string;
   bytes: Uint8Array;
@@ -29,7 +25,7 @@ type OutFileBinary = {
   type: "file";
   path: string;
   isBinary: true;
-  buffer: ArrayBuffer; // ✅ Transferable
+  buffer: ArrayBuffer;
 };
 
 type OutUpdated = { type: "updated"; path: string };
@@ -60,20 +56,13 @@ type Out =
   | { type: "deleted"; path: string }
   | { type: "bundled"; buffer: ArrayBuffer };
 
-// ==============================
-// State
-// ==============================
 const files = new Map<string, Entry>();
 
 const normalize = (p: string) => p.replace(/^\/+/, "").replace(/\\/g, "/");
 
-// ==============================
-// Worker
-// ==============================
 self.onmessage = (e: MessageEvent<InMsg>) => {
   const msg = e.data;
   try {
-    // 1) ZIP 로드
     if (msg.type === "loadZip") {
       files.clear();
       const unzipped = unzipSync(new Uint8Array(msg.buffer));
@@ -89,7 +78,6 @@ self.onmessage = (e: MessageEvent<InMsg>) => {
       postMessage(<Out>{ type: "loaded", tree }, undefined);
     }
 
-    // 2) 파일 조회
     if (msg.type === "getFile") {
       const key = normalize(msg.path);
       const fe = files.get(key);
@@ -115,7 +103,6 @@ self.onmessage = (e: MessageEvent<InMsg>) => {
       }
     }
 
-    // 3) 텍스트 업데이트
     if (msg.type === "updateFile") {
       const key = normalize(msg.path);
       const fe = files.get(key);
@@ -126,7 +113,6 @@ self.onmessage = (e: MessageEvent<InMsg>) => {
       postMessage(<OutUpdated>{ type: "updated", path: fe.path }, undefined);
     }
 
-    // 4) ZIP 번들
     if (msg.type === "buildZip") {
       const o: Record<string, Uint8Array> = {};
       for (const [p, fe] of files) o[p] = fe.bytes;
@@ -137,7 +123,6 @@ self.onmessage = (e: MessageEvent<InMsg>) => {
       ]);
     }
 
-    // ✅ 새 파일 생성
     if (msg.type === "createFile") {
       const key = normalize(msg.path);
       if (files.has(key)) throw new Error("already exists");
@@ -150,7 +135,6 @@ self.onmessage = (e: MessageEvent<InMsg>) => {
       } as Out);
     }
 
-    // ✅ 경로 삭제(파일 1개 또는 폴더 경로 트리 전체)
     if (msg.type === "deletePath") {
       const key = normalize(msg.path);
       // 파일 1개 삭제

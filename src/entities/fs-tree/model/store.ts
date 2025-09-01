@@ -1,4 +1,3 @@
-// src/store/useFsStore.ts
 import { create } from "zustand";
 import { revokeIfBlobUrl } from "@shared/api/zip";
 import { expandedToDepth } from "@entities/fs-tree/lib/expand";
@@ -93,7 +92,6 @@ export const useFsStore = create<State>((set, get) => ({
   setActive: (p) => set({ activePath: p }),
   setDragActive: (v) => set({ dragActive: v }),
 
-  // ✅ 새 파일
   newFile: async (baseOnPath) => {
     const s = get();
     if (!s.tree) return;
@@ -125,8 +123,6 @@ export const useFsStore = create<State>((set, get) => ({
       };
     });
   },
-
-  // ✅ 새 폴더
   newFolder: async (baseOnPath) => {
     const s = get();
     if (!s.tree) return;
@@ -137,8 +133,6 @@ export const useFsStore = create<State>((set, get) => ({
     if (!name) return;
     const full = (folderBase === "/" ? "" : folderBase) + "/" + name;
 
-    // 비어 있는 폴더는 ZIP에 바로 안 남을 수 있어요(빈 폴더는 보존 안 되는 포맷도 있음).
-    // 필요하면 '.keep' 파일도 같이 생성하세요. (옵션)
     set(({ tree, expanded }) => {
       if (!tree) return {};
       insertFolder(tree, full);
@@ -149,7 +143,6 @@ export const useFsStore = create<State>((set, get) => ({
     });
   },
 
-  // ✅ 삭제(파일 또는 폴더)
   deleteEntry: async (targetPath) => {
     const s = get();
     if (!s.tree) return;

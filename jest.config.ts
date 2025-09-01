@@ -5,7 +5,7 @@ const config: Config = {
   setupFilesAfterEnv: ["<rootDir>/src/setupTests.ts"],
   testPathIgnorePatterns: [
     "/node_modules/",
-    "/e2e/", // ✅ 루트 e2e 무시
+    "/e2e/",
     "/playwright-report/",
     "/test-results/",
   ],

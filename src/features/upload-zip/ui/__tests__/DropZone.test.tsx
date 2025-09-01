@@ -4,7 +4,6 @@ import { renderWithProviders } from "@shared/test/render";
 import { fireEvent, screen, waitFor, act } from "@testing-library/react";
 import DropZone from "../DropZone";
 
-/** ────────────── 1) Zustand store mock ────────────── */
 const storeSnapshot: any = {
   dragActive: false,
   setDragActive: jest.fn((v: boolean) => {
@@ -31,19 +30,16 @@ jest.mock("@entities/fs-tree", () => {
   return { __esModule: true, useFsStore };
 });
 
-/** ────────────── 2) loadZip mock ────────────── */
 const loadZipMock = jest.fn();
 jest.mock("@shared/api/zip", () => ({
   __esModule: true,
   loadZip: (...args: any[]) => loadZipMock(...args),
 }));
 
-/** ────────────── 3) globals ────────────── */
 jest.spyOn(window, "alert").mockImplementation(() => {});
 const addSpy = jest.spyOn(window, "addEventListener");
 const removeSpy = jest.spyOn(window, "removeEventListener");
 
-/** 💡 유틸: cancelable 이벤트 디스패치 (preventDefault 검증용) */
 const dispatchCancelable = (type: string) => {
   const evt = new Event(type, { bubbles: true, cancelable: true });
   act(() => {
