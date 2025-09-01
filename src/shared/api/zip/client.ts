@@ -1,11 +1,9 @@
-// src/lib/zipClient.ts
 import type { TreeNode, Tab } from "@entities/fs-tree";
 import { buildTree } from "@shared/lib/tree";
 import { guessLanguage, guessMime } from "@shared/lib/isBinary";
 
 const normalize = (p: string) => p.replace(/^\/+/, "").replace(/\\/g, "/");
 
-// ✅ HMR에서도 워커 1개만 유지
 const WKEY = "__zipWorker__" as const;
 const w = (globalThis as any)[WKEY] as Worker | undefined;
 const worker: Worker =
@@ -52,7 +50,7 @@ export async function loadZip(file: File): Promise<TreeNode> {
 }
 
 export async function fetchFileTab(path: string): Promise<Tab> {
-  worker.postMessage({ type: "getFile", path: normalize(path) }); // ✅ normalize
+  worker.postMessage({ type: "getFile", path: normalize(path) });
   const res = await once<FileEvent>("file");
 
   if (res.isBinary) {
@@ -78,7 +76,7 @@ export async function updateText(path: string, content: string) {
     type: "updateFile",
     path: normalize(path),
     text: content,
-  }); // ✅ normalize
+  });
   await once("updated");
 }
 
@@ -95,7 +93,6 @@ export function revokeIfBlobUrl(url?: string) {
   if (url && url.startsWith("blob:")) URL.revokeObjectURL(url);
 }
 
-// 추가 함수
 export async function createFile(path: string, text = "") {
   worker.postMessage({ type: "createFile", path: normalize(path), text });
   await once("created");

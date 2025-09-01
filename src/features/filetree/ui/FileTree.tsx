@@ -42,7 +42,6 @@ const FileTree = memo(() => {
     setFocusIdx(idx);
 
     const api = listRef.current as any;
-    // react-virtuoso 핸들 우선
     if (api?.scrollToIndex && typeof api.scrollToIndex === "function") {
       try {
         api.scrollToIndex({ index: idx, align: "center", behavior: "auto" });
@@ -87,9 +86,8 @@ const FileTree = memo(() => {
         e.preventDefault();
         if (n.type === "folder") {
           if (!expanded[n.path]) toggleExpanded(n.path);
-          else focusRow(focusIdx + 1); // 이미 열려있다면 다음(보통 첫 자식)
+          else focusRow(focusIdx + 1);
         } else {
-          // 파일은 Enter와 동일: 열기
           onRowClick(n, focusIdx);
         }
         break;
@@ -153,7 +151,6 @@ const FileTree = memo(() => {
     );
   };
 
-  // 현재 포커스된 항목 경로
   const focusedPath = data[focusIdx]?.path;
 
   if (!tree) return <EmptyState />;
@@ -232,7 +229,7 @@ const Row = styled.div<{
 
 const Wrap = styled.div`
   display: flex;
-  flex-direction: column; /* ✅ 칼럼 레이아웃 */
+  flex-direction: column;
   height: 100%;
   overflow: hidden;
   font-size: 13px;
@@ -242,7 +239,7 @@ const Wrap = styled.div`
 `;
 
 const Toolbar = styled.div`
-  height: ${BAR_H}px; /* ✅ 공통 높이 */
+  height: ${BAR_H}px;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -268,7 +265,7 @@ const Toolbar = styled.div`
 
 const TreeBody = styled.div`
   flex: 1;
-  min-height: 0; /* ✅ 툴바 아래 영역을 모두 사용 */
+  min-height: 0;
 `;
 
 export default FileTree;

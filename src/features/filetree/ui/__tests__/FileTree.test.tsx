@@ -4,9 +4,6 @@ import "@testing-library/jest-dom";
 import React from "react";
 import FileTree from "../FileTree";
 
-/* ── 모듈 목킹 ───────────────────────────────────────────────── */
-
-// tests 상단의 mock 교체 (features/filetree/ui/__tests__/FileTree.test.tsx)
 jest.mock("react-virtuoso", () => {
   const React = require("react");
   const Virtuoso = React.forwardRef(function VirtuosoMock(
@@ -26,7 +23,6 @@ jest.mock("react-virtuoso", () => {
   return { __esModule: true, Virtuoso };
 });
 
-// 2) Zustand store 훅 (SUT가 import하는 경로 그대로!)
 const storeState: any = {
   tree: null,
   expanded: {},
@@ -43,14 +39,12 @@ jest.mock("@entities/fs-tree/model/store", () => ({
   useFsStore: (selector: any) => selector(storeState),
 }));
 
-// 3) fetchFileTab (SUT의 실제 import 경로에 맞추기!)
 const fetchFileTabMock = jest.fn();
 jest.mock("@shared/api/zip", () => ({
   __esModule: true,
   fetchFileTab: (...args: any[]) => fetchFileTabMock(...args),
 }));
 
-/* ── 샘플 트리 ──────────────────────────────────────────────── */
 const sampleTree = {
   name: "/",
   path: "/",
@@ -66,7 +60,6 @@ const sampleTree = {
   ],
 };
 
-/* ── 테스트 ─────────────────────────────────────────────────── */
 describe("FileTree (unit)", () => {
   beforeEach(() => {
     jest.clearAllMocks();

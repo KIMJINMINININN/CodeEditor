@@ -1,4 +1,3 @@
-// src/features/header/HeaderBar.tsx
 import styled from "styled-components";
 import { useFsStore } from "@entities/fs-tree";
 import { buildZip, loadZip, updateText } from "@shared/api/zip";
@@ -11,7 +10,6 @@ export default function HeaderBar() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const onUploadClick = () => {
-    // 사용자 제스처 안에서 호출되므로 파일 선택 창이 정상 오픈
     inputRef.current?.click();
   };
 
@@ -23,11 +21,10 @@ export default function HeaderBar() {
   };
 
   const flushAllOpenTextTabs = async () => {
-    const { tabs } = useFsStore.getState(); // ✅ 현재 스토어 스냅샷
+    const { tabs } = useFsStore.getState();
     const tasks = tabs
       .filter((t) => t.kind === "text")
       .map((t) => updateText(t.path, t.content ?? ""));
-    // 실패해도 계속 진행 (로그만 찍기)
     await Promise.allSettled(tasks);
   };
 
@@ -37,13 +34,10 @@ export default function HeaderBar() {
       return;
     }
 
-    // ✅ 1) 마지막 편집 내용까지 워커에 반영
     await flushAllOpenTextTabs();
 
-    // ✅ 2) 그 다음 ZIP 생성
     const blob = await buildZip();
 
-    // ✅ 3) 다운로드 (일부 브라우저는 revoke를 다음 틱에)
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = "edited.zip";
@@ -64,7 +58,6 @@ export default function HeaderBar() {
         <i className="codicon codicon-cloud-upload" /> 파일 선택
       </button>
 
-      {/* 화면에 보이지 않지만 ref로 트리거 */}
       <input
         ref={inputRef}
         id="zipInput"

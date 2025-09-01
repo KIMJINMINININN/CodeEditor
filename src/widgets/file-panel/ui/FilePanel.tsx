@@ -1,4 +1,3 @@
-// src/widgets/file-panel/ui/FilePanel.tsx
 import styled from "styled-components";
 import FileTree from "@features/filetree";
 

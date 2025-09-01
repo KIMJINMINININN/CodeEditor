@@ -1,4 +1,3 @@
-// src/app/index.tsx
 import "@vscode/codicons/dist/codicon.css";
 import WorkspacePage from "@pages/workspace";
 import { ThemeRoot } from "@app/providers/providers/theme";

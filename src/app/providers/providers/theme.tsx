@@ -1,4 +1,3 @@
-// src/app/providers/theme.tsx
 import { ThemeProvider, createGlobalStyle } from "styled-components";
 import { darkTheme } from "@shared/styles/theme";
 

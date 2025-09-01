@@ -1,10 +1,5 @@
-// src/lib/expand.ts
 import type { TreeNode } from "@entities/fs-tree";
 
-/**
- * 폴더 노드를 maxDepth까지 펼친 상태로 반환합니다.
- * depth: 루트('/')가 0, 그 자식 폴더들이 1
- */
 export function expandedToDepth(
   root: TreeNode,
   maxDepth: number,
