@@ -1,15 +1,10 @@
 import "@testing-library/jest-dom";
 import React from "react";
 import { renderWithProviders } from "@shared/test/render";
-import { act, waitFor, screen } from "@testing-library/react";
-
+import { fireEvent, screen, waitFor, act } from "@testing-library/react";
 import DropZone from "../DropZone";
 
-/* ──────────────────────────────────────────────────────────────
-   1) Zustand store 모킹 (0/1/2 인자 호환)
-   - SUT가 import하는 경로로 맞추세요.
-   - 예: '@entities/fs-tree' 또는 '@entities/fs-tree/model'
-────────────────────────────────────────────────────────────── */
+/** ────────────── 1) Zustand store mock ────────────── */
 const storeSnapshot: any = {
   dragActive: false,
   setDragActive: jest.fn((v: boolean) => {
@@ -19,8 +14,7 @@ const storeSnapshot: any = {
 };
 jest.mock("@entities/fs-tree", () => {
   const listeners = new Set<(s: any) => void>();
-
-  const useFsStore = (selector?: any, _eq?: any) => {
+  const useFsStore = (selector?: any) => {
     if (typeof selector === "function") return selector(storeSnapshot);
     return storeSnapshot;
   };
@@ -37,29 +31,27 @@ jest.mock("@entities/fs-tree", () => {
   return { __esModule: true, useFsStore };
 });
 
-/* ──────────────────────────────────────────────────────────────
-   2) loadZip 모킹 (성공/실패 케이스 주입)
-────────────────────────────────────────────────────────────── */
+/** ────────────── 2) loadZip mock ────────────── */
 const loadZipMock = jest.fn();
 jest.mock("@shared/api/zip", () => ({
   __esModule: true,
   loadZip: (...args: any[]) => loadZipMock(...args),
 }));
 
-/* ──────────────────────────────────────────────────────────────
-   3) 전역 alert 및 add/removeEventListener 스파이
-────────────────────────────────────────────────────────────── */
+/** ────────────── 3) globals ────────────── */
 jest.spyOn(window, "alert").mockImplementation(() => {});
 const addSpy = jest.spyOn(window, "addEventListener");
 const removeSpy = jest.spyOn(window, "removeEventListener");
 
-/* ──────────────────────────────────────────────────────────────
-   4) 유틸: 특정 타입의 등록된 핸들러 찾기
-────────────────────────────────────────────────────────────── */
-function getHandler(type: string) {
-  const call = addSpy.mock.calls.find((c) => c[0] === type);
-  return call?.[1] as ((e: any) => void) | undefined;
-}
+/** 💡 유틸: cancelable 이벤트 디스패치 (preventDefault 검증용) */
+const dispatchCancelable = (type: string) => {
+  const evt = new Event(type, { bubbles: true, cancelable: true });
+  act(() => {
+    // jsdom에서도 window로 발행 가능
+    window.dispatchEvent(evt);
+  });
+  return evt;
+};
 
 describe("DropZone (unit)", () => {
   beforeEach(() => {
@@ -70,15 +62,10 @@ describe("DropZone (unit)", () => {
   it("1) dragenter → 오버레이 표시, setDragActive(true)", async () => {
     const { unmount } = renderWithProviders(<DropZone />);
 
-    const handler = getHandler("dragenter");
-    expect(handler).toBeDefined();
-
-    await act(async () => {
-      handler!({ preventDefault: jest.fn(), stopPropagation: jest.fn() });
-    });
+    // fireEvent가 내부적으로 act를 wrapping
+    fireEvent.dragEnter(window as any);
 
     expect(storeSnapshot.setDragActive).toHaveBeenCalledWith(true);
-
     await waitFor(() =>
       expect(screen.getByTestId("drop-overlay")).toHaveAttribute(
         "aria-hidden",
@@ -89,30 +76,31 @@ describe("DropZone (unit)", () => {
     unmount();
   });
 
-  it("2) dragleave(카운터 0) → 오버레이 숨김, setDragActive(false)", () => {
+  it("2) dragleave(카운터 0) → 오버레이 숨김, setDragActive(false)", async () => {
     renderWithProviders(<DropZone />);
 
-    const enter = getHandler("dragenter")!;
-    const leave = getHandler("dragleave")!;
-    // 내부 카운터 고려: enter 1번 후 leave 1번 → 0이 되도록
-    enter({ preventDefault: jest.fn(), stopPropagation: jest.fn() });
-    leave({ preventDefault: jest.fn(), stopPropagation: jest.fn() });
+    fireEvent.dragEnter(window as any);
+    fireEvent.dragLeave(window as any);
 
     expect(storeSnapshot.setDragActive).toHaveBeenLastCalledWith(false);
-
-    const overlay = screen.getByTestId("drop-overlay");
-    expect(overlay).toHaveAttribute("aria-hidden", "true");
+    await waitFor(() =>
+      expect(screen.getByTestId("drop-overlay")).toHaveAttribute(
+        "aria-hidden",
+        "true",
+      ),
+    );
   });
 
-  it("3) drop(파일 없음) → 숨김 + setDragActive(false), loadZip 미호출", async () => {
+  it("3) drop(파일 없음) → 숨김 + setDragActive(false), loadZip 미호출", () => {
     renderWithProviders(<DropZone />);
 
-    const drop = getHandler("drop")!;
-    drop({
-      preventDefault: jest.fn(),
-      stopPropagation: jest.fn(),
-      dataTransfer: { files: [] },
-    });
+    fireEvent.dragEnter(window as any);
+    fireEvent.drop(
+      window as any,
+      {
+        dataTransfer: { files: [] },
+      } as any,
+    );
 
     expect(storeSnapshot.setDragActive).toHaveBeenLastCalledWith(false);
     expect(loadZipMock).not.toHaveBeenCalled();
@@ -122,12 +110,14 @@ describe("DropZone (unit)", () => {
     renderWithProviders(<DropZone />);
 
     const file = new File(["x"], "note.txt", { type: "text/plain" });
-    const drop = getHandler("drop")!;
-    drop({
-      preventDefault: jest.fn(),
-      stopPropagation: jest.fn(),
-      dataTransfer: { files: [file] },
-    });
+
+    fireEvent.dragEnter(window as any);
+    fireEvent.drop(
+      window as any,
+      {
+        dataTransfer: { files: [file] },
+      } as any,
+    );
 
     expect(window.alert).toHaveBeenCalled();
     expect(loadZipMock).not.toHaveBeenCalled();
@@ -144,43 +134,39 @@ describe("DropZone (unit)", () => {
       type: "application/zip",
     });
 
-    const drop = getHandler("drop")!;
-    await drop({
-      preventDefault: jest.fn(),
-      stopPropagation: jest.fn(),
-      dataTransfer: { files: [file] },
-    });
+    fireEvent.dragEnter(window as any);
+    fireEvent.drop(
+      window as any,
+      {
+        dataTransfer: { files: [file] },
+      } as any,
+    );
 
-    // loadZip 호출 및 결과 반영
-    expect(loadZipMock).toHaveBeenCalledWith(file);
-    // setTree는 loadZip resolve 이후 호출된다고 가정
+    await waitFor(() => expect(loadZipMock).toHaveBeenCalledWith(file));
     expect(storeSnapshot.setTree).toHaveBeenCalledWith(tree);
     expect(storeSnapshot.setDragActive).toHaveBeenLastCalledWith(false);
   });
 
-  it("6) dragover에서 e.preventDefault() 호출", () => {
+  it("6) dragover에서 preventDefault 호출 여부", () => {
     renderWithProviders(<DropZone />);
 
-    const over = getHandler("dragover")!;
-    const prevent = jest.fn();
-    over({ preventDefault: prevent, stopPropagation: jest.fn() });
-
-    expect(prevent).toHaveBeenCalled();
+    const evt = dispatchCancelable("dragover");
+    expect(evt.defaultPrevented).toBe(true); // onDragOver에서 preventDefault 처리 기대
   });
 
   it("7) 마운트/언마운트 시 전역 리스너 등록/해제", () => {
     const { unmount } = renderWithProviders(<DropZone />);
 
-    // 등록 확인: dragover/dragenter/dragleave/drop 각각 1회 이상
+    // 등록 확인
     const types = addSpy.mock.calls.map((c) => c[0]);
     expect(types).toEqual(
       expect.arrayContaining(["dragover", "dragenter", "dragleave", "drop"]),
     );
 
+    // 해제 확인
     unmount();
-
-    const removedTypes = removeSpy.mock.calls.map((c) => c[0]);
-    expect(removedTypes).toEqual(
+    const removed = removeSpy.mock.calls.map((c) => c[0]);
+    expect(removed).toEqual(
       expect.arrayContaining(["dragover", "dragenter", "dragleave", "drop"]),
     );
   });

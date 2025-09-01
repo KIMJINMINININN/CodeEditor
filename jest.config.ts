@@ -3,6 +3,12 @@ const config: Config = {
   preset: "ts-jest",
   testEnvironment: "jsdom",
   setupFilesAfterEnv: ["<rootDir>/src/setupTests.ts"],
+  testPathIgnorePatterns: [
+    "/node_modules/",
+    "/e2e/", // ✅ 루트 e2e 무시
+    "/playwright-report/",
+    "/test-results/",
+  ],
   moduleNameMapper: {
     "\\.(css|scss)$": "identity-obj-proxy",
     "^@/(.*)$": "<rootDir>/src/$1",

@@ -57,6 +57,7 @@ export default function HeaderBar() {
       <button
         data-testid="upload-btn"
         type="button"
+        id="uploadBtn"
         className="icon-btn"
         onClick={onUploadClick}
       >
@@ -71,6 +72,7 @@ export default function HeaderBar() {
         accept=".zip"
         onChange={onUpload}
         style={{ display: "none" }}
+        aria-labelledby="uploadBtn"
       />
       <button
         data-testid="download-btn"
